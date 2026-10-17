@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的生活 · 个人专属</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg:#f5f6fa; --card:#ffffff; --ink:#2d3142; --muted:#8a8f9f;
+    --brand:#6c7cf7; --brand-soft:#eef0fe; --green:#34c88a; --red:#f26d6d;
+    --orange:#f7a94c; --line:#e8eaf2;
+  }
+  body { font-family:"Microsoft YaHei","PingFang SC",sans-serif; background:var(--bg); color:var(--ink); font-size:14px; }
+  #app { display:flex; min-height:100vh; }
+
+  /* ===== 侧边导航 ===== */
+  nav { width:200px; background:var(--card); border-right:1px solid var(--line); padding:22px 12px; position:sticky; top:0; height:100vh; display:flex; flex-direction:column; flex-shrink:0; }
+  .logo { font-size:20px; font-weight:700; padding:0 12px 18px; }
+  .logo span { color:var(--brand); }
+  .nav-item { padding:11px 14px; border-radius:10px; cursor:pointer; color:var(--muted); font-size:14px; margin-bottom:4px; transition:.15s; }
+  .nav-item:hover { background:var(--brand-soft); color:var(--brand); }
+  .nav-item.active { background:var(--brand); color:#fff; font-weight:600; }
+  .nav-foot { margin-top:auto; font-size:11px; color:var(--muted); padding:0 12px; line-height:1.7; }
+
+  /* ===== 主区 ===== */
+  main { flex:1; padding:26px 32px 60px; max-width:1080px; }
+  .page { display:none; }
+  .page.active { display:block; }
+  h1.page-title { font-size:22px; margin-bottom:4px; }
+  .page-sub { color:var(--muted); font-size:13px; margin-bottom:18px; }
+
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin-bottom:14px; }
+  .card h3 { font-size:15px; margin-bottom:10px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .row { display:flex; gap:14px; margin-bottom:14px; }
+  .row .card { flex:1; margin-bottom:0; }
+
+  button { font-family:inherit; cursor:pointer; }
+  .btn { background:var(--brand); color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; }
+  .btn:hover { opacity:.9; }
+  .btn-ghost { background:#fff; border:1px solid var(--line); border-radius:8px; padding:7px 14px; font-size:13px; color:var(--ink); }
+  .btn-ghost:hover { border-color:var(--brand); color:var(--brand); }
+  .btn-danger { background:#fff; border:1px solid #f3c2c2; color:var(--red); border-radius:8px; padding:7px 14px; font-size:13px; }
+  .btn-mini { background:none; border:none; color:var(--muted); font-size:12px; padding:2px 6px; border-radius:6px; }
+  .btn-mini:hover { background:var(--brand-soft); color:var(--brand); }
+
+  input[type=text], input[type=time], input[type=date], input[type=number], textarea, select {
+    font-family:inherit; font-size:13px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink);
+  }
+  input:focus, textarea:focus { outline:2px solid var(--brand-soft); border-color:var(--brand); }
+
+  .muted { color:var(--muted); }
+  .small { font-size:12px; }
+  .tag { display:inline-block; background:var(--brand-soft); color:var(--brand); border-radius:6px; padding:2px 8px; font-size:12px; }
+  .empty { color:var(--muted); font-size:13px; padding:14px 0; text-align:center; }
+
+  /* 心情/天气选择 */
+  .pick-row { display:flex; gap:10px; }
+  .pick-btn { border:2px solid transparent; background:var(--bg); border-radius:10px; padding:8px 10px; font-size:22px; cursor:pointer; text-align:center; min-width:52px; }
+  .pick-btn .lbl { display:block; font-size:11px; color:var(--muted); margin-top:2px; }
+  .pick-btn.sel { border-color:var(--brand); background:var(--brand-soft); }
+  .pick-btn.w { font-size:18px; }
+
+  /* 任务列表 */
+  .task-form { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .task-item { display:flex; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--line); }
+  .task-item:last-child { border-bottom:none; }
+  .task-item .tm { font-size:12px; color:var(--muted); width:92px; flex-shrink:0; }
+  .task-item .tt { flex:1; }
+  .task-item.done .tt { text-decoration:line-through; color:var(--muted); }
+  .task-item input[type=checkbox] { width:16px; height:16px; accent-color:var(--brand); cursor:pointer; }
+  .progress-track { height:8px; background:var(--bg); border-radius:5px; overflow:hidden; margin:8px 0 4px; }
+  .progress-fill { height:100%; background:var(--brand); border-radius:5px; transition:width .3s; }
+
+  /* 时间轴 */
+  .tl-wrap { position:relative; border:1px solid var(--line); border-radius:12px; background:#fff; overflow:hidden; }
+  .tl-allday { padding:8px 14px; border-bottom:1px dashed var(--line); font-size:12px; color:var(--muted); background:#fbfbff; }
+  .tl { position:relative; height:1152px; }
+  .tl-hour { position:relative; height:48px; border-bottom:1px solid var(--line); cursor:pointer; }
+  .tl-hour:hover { background:#fbfbff; }
+  .tl-hour .h { position:absolute; left:10px; top:4px; font-size:11px; color:var(--muted); }
+  .tl-block { position:absolute; left:70px; right:14px; border-radius:8px; padding:4px 10px; font-size:12px; color:#fff; overflow:hidden; cursor:pointer; z-index:2; }
+  .tl-block.done { opacity:.55; text-decoration:line-through; }
+  .tl-now { position:absolute; left:0; right:0; height:2px; background:var(--red); z-index:3; }
+  .tl-now::before { content:"现在"; position:absolute; right:8px; top:-16px; font-size:11px; color:var(--red); }
+
+  /* 目标 */
+  .goal-card .top { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .goal-card .name { font-weight:600; flex:1; }
+  .goal-card input[type=range] { width:100%; accent-color:var(--brand); }
+  .subgoal { display:flex; align-items:center; gap:8px; padding:4px 0; font-size:13px; }
+  .subgoal.done .sg-t { text-decoration:line-through; color:var(--muted); }
+
+  /* 心情日历 */
+  .cal { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .cal .wd { text-align:center; font-size:11px; color:var(--muted); padding:4px 0; }
+  .cal .day { text-align:center; font-size:12px; padding:8px 0; border-radius:8px; background:var(--bg); cursor:pointer; }
+  .cal .day.blank { background:none; cursor:default; }
+  .cal .day.today { outline:2px solid var(--brand); }
+
+  /* 打卡圆点 */
+  .dots { display:flex; gap:8px; }
+  .dot { width:26px; height:26px; border-radius:50%; background:var(--bg); display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--muted); }
+  .dot.on { background:var(--green); color:#fff; }
+
+  /* 心情统计图 */
+  .chart { display:flex; align-items:flex-end; gap:6px; height:110px; padding-top:10px; }
+  .bar { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end; }
+  .bar .b { width:100%; border-radius:4px 4px 0 0; background:var(--brand); min-height:3px; }
+  .bar .d { font-size:10px; color:var(--muted); }
+
+  /* 统计卡 */
+  .stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:14px; }
+  .stat { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; }
+  .stat .num { font-size:26px; font-weight:700; color:var(--brand); }
+  .stat .lbl { font-size:12px; color:var(--muted); margin-top:2px; }
+
+  .memo-item { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--line); font-size:13px; }
+  .memo-item:last-child { border-bottom:none; }
+  .memo-item .t { flex:1; }
+
+  .fun-item { display:flex; align-items:center; gap:10px; padding:9px 4px; border-bottom:1px solid var(--line); }
+  .fun-item:last-child { border-bottom:none; }
+  .fun-item .c { flex:1; }
+  .fun-item.done .c { text-decoration:line-through; color:var(--muted); }
+
+  .rec-card { background:linear-gradient(135deg,#f3f5ff,#fdf6ec); border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin-bottom:14px; }
+  .rec-card .reason { font-size:12px; color:var(--muted); margin-top:6px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <nav id="nav">
+    <div class="logo">我的<span>生活</span></div>
+    <div class="nav-item active" data-action="nav" data-page="home">🏠 首页总览</div>
+    <div class="nav-item" data-action="nav" data-page="tasks">📋 今日计划</div>
+    <div class="nav-item" data-action="nav" data-page="goals">🎯 学习目标</div>
+    <div class="nav-item" data-action="nav" data-page="timeline">🕐 时间段</div>
+    <div class="nav-item" data-action="nav" data-page="fitness">💪 健身计划</div>
+    <div class="nav-item" data-action="nav" data-page="diet">🍚 饮食计划</div>
+    <div class="nav-item" data-action="nav" data-page="fun">🎮 游戏娱乐</div>
+    <div class="nav-item" data-action="nav" data-page="mood">🌅 清晨心情</div>
+    <div class="nav-item" data-action="nav" data-page="settings">⚙️ 数据与设置</div>
+    <div class="nav-foot">数据保存在本机<br>刷新/重启不丢失</div>
+  </nav>
+  <main>
+    <section class="page active" id="page-home"></section>
+    <section class="page" id="page-tasks"></section>
+    <section class="page" id="page-goals"></section>
+    <section class="page" id="page-timeline"></section>
+    <section class="page" id="page-fitness"></section>
+    <section class="page" id="page-diet"></section>
+    <section class="page" id="page-fun"></section>
+    <section class="page" id="page-mood"></section>
+    <section class="page" id="page-settings"></section>
+  </main>
+</div>
+
+<script>
+"use strict";
+/* ================= 数据层 ================= */
+const LS_KEY = "myLifeData";
+function blank(){ return { version:1, tasks:{}, goals:[], moods:{}, weather:{}, fitness:{}, diet:{}, fun:{}, memos:[] }; }
+function normalize(d){
+  const b = blank();
+  for(const k of Object.keys(b)){ if(d[k] !== undefined) b[k] = d[k]; }
+  b.version = 1;
+  return b;
+}
+function load(){
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return blank();
+    const d = JSON.parse(raw);
+    if(!d || typeof d !== "object") return blank();
+    return normalize(d);
+  } catch(e){ return blank(); }
+}
+let DB = load();
+let fileHandle = null;
+
+function save(){
+  localStorage.setItem(LS_KEY, JSON.stringify(DB));
+  if(fileHandle) writeToFile();
+}
+async function writeToFile(){
+  try {
+    const w = await fileHandle.createWritable();
+    await w.write(exportJSON());
+    await w.close();
+  } catch(e){ /* 文件写入失败不影响本地存储 */ }
+}
+function exportJSON(){ return JSON.stringify(DB, null, 2); }
+function importData(text){
+  try {
+    const d = JSON.parse(text);
+    if(!d || d.version !== 1 || typeof d.tasks !== "object" || !Array.isArray(d.goals)) return false;
+    DB = normalize(d);
+    save();
+    renderAll();
+    return true;
+  } catch(e){ return false; }
+}
+
+/* ================= 工具 ================= */
+function pad(n){ return String(n).padStart(2,"0"); }
+function keyOf(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+function todayKey(){ return keyOf(new Date()); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function toMin(t){ if(!t) return null; const p=t.split(":"); return (+p[0])*60 + (+p[1]); }
+function ask(msg){ return window.confirm(msg); }
+
+const MOODS = [
+  {level:5, label:"很好", emoji:"😄", color:"#2fbf71"},
+  {level:4, label:"不错", emoji:"🙂", color:"#8fd14f"},
+  {level:3, label:"一般", emoji:"😐", color:"#f7d54c"},
+  {level:2, label:"低落", emoji:"😔", color:"#f7a94c"},
+  {level:1, label:"糟糕", emoji:"😢", color:"#f26d6d"}
+];
+const WEATHERS = { sunny:"☀️ 晴", cloudy:"⛅ 阴", rainy:"🌧️ 雨", snowy:"❄️ 雪" };
+const TASK_COLORS = ["#6c7cf7","#34c88a","#f7a94c","#e067b0","#4cb8f7","#9b7ff7"];
+
+/* ================= AI 推荐引擎（本地规则） ================= */
+function recommend(mood, weather){
+  if(!mood || !weather) return null;
+  const indoor = (weather === "rainy" || weather === "snowy");
+  const weatherName = indoor ? (weather === "rainy" ? "雨天" : "雪天") : "";
+
+  const fitOutdoor = {
+    5:"充满活力的户外有氧 40 分钟（跑步/骑行/跳绳）",
+    4:"户外慢跑或快走 30 分钟",
+    3:"户外散步 + 瑜伽拉伸 20 分钟",
+    2:"慢走散步 20 分钟 + 深呼吸练习",
+    1:"10 分钟轻柔拉伸，晒晒太阳"
+  };
+  const fitIndoor = {
+    5:"室内健身操或跳绳 40 分钟",
+    4:"室内健身操 / 原地跑 30 分钟",
+    3:"室内瑜伽或拉伸 20 分钟",
+    2:"室内舒缓拉伸 15 分钟 + 深呼吸",
+    1:"10 分钟床上拉伸，早点休息"
+  };
+  const fitReason = {
+    5:"心情很好，适合高强度运动释放能量",
+    4:"状态不错，适度运动保持节奏",
+    3:"心情一般，轻度运动帮你提振精神",
+    2:"心情低落，舒缓运动有助于改善情绪",
+    1:"今天辛苦了，轻柔放松、好好休息最重要"
+  };
+
+  const dietTable = {
+    5:{b:"全麦吐司 + 鸡蛋 + 牛奶", l:"鸡胸肉沙拉 + 杂粮饭", d:"清蒸鱼 + 时蔬"},
+    4:{b:"燕麦粥 + 香蕉", l:"瘦肉炒饭 + 青菜", d:"番茄豆腐汤 + 米饭"},
+    3:{b:"小米粥 + 包子", l:"家常面 + 荷包蛋", d:"清炒时蔬 + 米饭"},
+    2:{b:"热汤面 + 荷包蛋", l:"暖胃粥 + 小菜", d:"炖汤 + 软米饭"},
+    1:{b:"白粥 + 清淡小菜", l:"热汤 + 馒头", d:"易消化的粥品"}
+  };
+  const dietReason = {
+    5:"心情好也要均衡饮食，保持好状态",
+    4:"正常饮食，注意荤素搭配",
+    3:"吃得舒服即可，别太重油重盐",
+    2:"低落时来点暖胃的食物，好好照顾自己",
+    1:"肠胃和心情都需要温柔对待，清淡易消化"
+  };
+
+  const funTable = {
+    5:"约朋友打球、唱歌，趁好心情好好嗨一下",
+    4:"看一部喜欢的电影，或打一会儿游戏",
+    3:"听音乐 + 轻松休闲 30 分钟",
+    2:"看轻松喜剧或搞笑视频，治愈一下自己",
+    1:"泡个热水澡，听舒缓音乐，早点休息"
+  };
+  const funReason = {
+    5:"好心情值得好好庆祝",
+    4:"适度娱乐，张弛有度",
+    3:"平淡的日子里给自己一点小乐趣",
+    2:"低落时做点轻松的事，别给自己压力",
+    1:"先照顾好自己，娱乐以放松为主"
+  };
+
+  const fit = indoor ? fitIndoor[mood] : fitOutdoor[mood];
+  let fr = fitReason[mood];
+  if(indoor) fr = weatherName + "，改为室内运动；" + fr;
+  const diet = Object.assign({}, dietTable[mood]);
+  let dr = dietReason[mood];
+  if(indoor) dr += "；" + weatherName + "吃点热乎的";
+
+  return { fitness:{text:fit, reason:fr}, diet:{meals:diet, reason:dr}, fun:{text:funTable[mood], reason:funReason[mood]} };
+}
+
+/* ================= 统计 ================= */
+function todayTasks(){ return DB.tasks[todayKey()] || []; }
+function completionRate(){
+  const t = todayTasks();
+  if(!t.length) return null;
+  const done = t.filter(x=>x.done).length;
+  return { done, total:t.length, pct:Math.round(done/t.length*100) };
+}
+function calcStreak(){
+  let s = 0;
+  const cur = new Date();
+  if(!DB.moods[keyOf(cur)]) cur.setDate(cur.getDate()-1); // 今天还没打卡则从昨天算起
+  while(DB.moods[keyOf(cur)]){ s++; cur.setDate(cur.getDate()-1); }
+  return s;
+}
+function last14Moods(){
+  const arr = [];
+  for(let i=13; i>=0; i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const k = keyOf(d);
+    arr.push({ key:k, label:(d.getMonth()+1)+"/"+d.getDate(), level: DB.moods[k] ? DB.moods[k].level : 0 });
+  }
+  return arr;
+}
+
+/* ================= 页面渲染 ================= */
+const $ = sel => document.querySelector(sel);
+let currentPage = "home";
+let editingTaskId = null;
+
+function showPage(p){
+  currentPage = p;
+  document.querySelectorAll(".nav-item").forEach(n=> n.classList.toggle("active", n.dataset.page===p));
+  document.querySelectorAll(".page").forEach(s=> s.classList.toggle("active", s.id==="page-"+p));
+  renderPage(p);
+}
+function renderPage(p){
+  ({home:renderHome, tasks:renderTasks, goals:renderGoals, timeline:renderTimeline,
+    fitness:renderFitness, diet:renderDiet, fun:renderFun, mood:renderMood, settings:renderSettings}[p])();
+}
+function renderAll(){ renderPage(currentPage); }
+
+/* ---------- 首页 ---------- */
+function renderHome(){
+  const k = todayKey();
+  const mood = DB.moods[k];
+  const weather = DB.weather[k];
+  const rec = recommend(mood && mood.level, weather);
+  const rate = completionRate();
+  const tasks = todayTasks().slice().sort((a,b)=> (toMin(a.start)||9999) - (toMin(b.start)||9999));
+
+  let nowHtml = '<p class="empty">现在没有安排中的任务</p>';
+  const nowMin = new Date().getHours()*60 + new Date().getMinutes();
+  const cur = tasks.find(t=> !t.done && toMin(t.start)!=null && toMin(t.end)!=null && nowMin>=toMin(t.start) && nowMin<=toMin(t.end));
+  if(cur){
+    const pct = Math.round((nowMin - toMin(cur.start)) / (toMin(cur.end) - toMin(cur.start)) * 100);
+    nowHtml = `<div style="font-weight:600;margin-bottom:6px">${esc(cur.title)}</div>
+      <div class="progress-track"><div class="progress-fill" style="width:${Math.min(100,Math.max(0,pct))}%"></div></div>
+      <p class="small muted">${esc(cur.start)} – ${esc(cur.end)} · 还剩 ${toMin(cur.end)-nowMin} 分钟</p>`;
+  }
+
+  const memos = DB.memos.slice(-5).reverse();
+
+  $("#page-home").innerHTML = `
+    <h1 class="page-title">首页总览</h1>
+    <p class="page-sub">${k} · 今天也要好好生活</p>
+    <div class="row">
+      <div class="card">
+        <h3>早安，今天心情如何？</h3>
+        <div class="pick-row">${MOODS.map(m=>`
+          <button class="pick-btn ${mood && mood.level===m.level ? "sel":""}" data-action="quick-mood" data-level="${m.level}">
+            ${m.emoji}<span class="lbl">${m.label}</span></button>`).join("")}
+        </div>
+      </div>
+      <div class="card">
+        <h3>今日天气（手动选择）</h3>
+        <div class="pick-row">${Object.keys(WEATHERS).map(w=>`
+          <button class="pick-btn w ${weather===w ? "sel":""}" data-action="set-weather" data-w="${w}">
+            ${WEATHERS[w].split(" ")[0]}<span class="lbl">${WEATHERS[w].split(" ")[1]}</span></button>`).join("")}
+        </div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>📋 今日计划 ${rate ? `<span class="tag">${rate.done}/${rate.total}</span>` : ""}</h3>
+        ${rate ? `<div class="progress-track"><div class="progress-fill" style="width:${rate.pct}%"></div></div>` : ""}
+        ${tasks.length ? tasks.slice(0,3).map(t=>`
+          <div class="task-item ${t.done?"done":""}">
+            <span class="tm">${t.start?esc(t.start):"全天"}</span><span class="tt">${esc(t.title)}</span>
+          </div>`).join("") : '<p class="empty">今天还没有计划，去添加一条吧</p>'}
+        ${tasks.length>3 ? `<p class="small muted">还有 ${tasks.length-3} 条…</p>` : ""}
+        <button class="btn-ghost" style="margin-top:8px" data-action="nav" data-page="tasks">管理今日计划 →</button>
+      </div>
+      <div class="card">
+        <h3>🕐 现在时段</h3>
+        ${nowHtml}
+        <button class="btn-ghost" style="margin-top:8px" data-action="nav" data-page="timeline">查看时间轴 →</button>
+      </div>
+      <div class="rec-card">
+        <h3>✨ AI 今日推荐</h3>
+        ${rec ? `
+          <p>💪 ${esc(rec.fitness.text)}</p>
+          <p style="margin-top:4px">🍚 晚餐建议：${esc(rec.diet.meals.d)}</p>
+          <p style="margin-top:4px">🎮 ${esc(rec.fun.text)}</p>` :
+          '<p class="empty">先在上方打卡心情并选择天气，我会为你推荐今天的安排</p>'}
+      </div>
+      <div class="card">
+        <h3>📝 快速备忘</h3>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="text" id="memo-input" placeholder="随手记点什么…" style="flex:1">
+          <button class="btn" data-action="add-memo">记下</button>
+        </div>
+        ${memos.length ? memos.map(m=>`
+          <div class="memo-item"><span class="t">${esc(m.text)}</span>
+          <button class="btn-mini" data-action="del-memo" data-id="${m.id}">删除</button></div>`).join("") :
+          '<p class="empty">暂无备忘</p>'}
+      </div>
+    </div>`;
+}
+
+/* ---------- 今日计划 ---------- */
+function renderTasks(){
+  const k = todayKey();
+  const tasks = todayTasks().slice().sort((a,b)=> (toMin(a.start)||9999) - (toMin(b.start)||9999));
+  const rate = completionRate();
+  $("#page-tasks").innerHTML = `
+    <h1 class="page-title">今日计划</h1>
+    <p class="page-sub">${k} · 完成勾选，即时保存</p>
+    <div class="card">
+      <div class="task-form">
+        <input type="text" id="t-title" placeholder="要做什么？" style="flex:2;min-width:160px">
+        <input type="time" id="t-start">
+        <span class="muted">至</span>
+        <input type="time" id="t-end">
+        <input type="text" id="t-memo" placeholder="备注（可选）" style="flex:1;min-width:100px">
+        <button class="btn" data-action="add-task">${editingTaskId ? "保存修改" : "添加"}</button>
+        ${editingTaskId ? '<button class="btn-ghost" data-action="cancel-edit">取消</button>' : ""}
+      </div>
+    </div>
+    <div class="card">
+      <h3>任务列表 ${rate ? `<span class="tag">已完成 ${rate.done}/${rate.total}</span>` : ""}</h3>
+      ${rate ? `<div class="progress-track"><div class="progress-fill" style="width:${rate.pct}%"></div></div>` : ""}
+      ${tasks.length ? tasks.map((t,i)=>`
+        <div class="task-item ${t.done?"done":""}">
+          <input type="checkbox" data-change="toggle-task" data-id="${t.id}" ${t.done?"checked":""}>
+          <span class="tm">${t.start?esc(t.start):"--:--"} - ${t.end?esc(t.end):"--:--"}</span>
+          <span class="tt">${esc(t.title)}${t.memo?` <span class="small muted">（${esc(t.memo)}）</span>`:""}</span>
+          <button class="btn-mini" data-action="edit-task" data-id="${t.id}">编辑</button>
+          <button class="btn-mini" data-action="del-task" data-id="${t.id}">删除</button>
+        </div>`).join("") : '<p class="empty">今天还没有计划，从上方添加第一条吧</p>'}
+    </div>`;
+}
+
+/* ---------- 时间段 ---------- */
+const TL_H = 48; // 每小时像素高
+function renderTimeline(){
+  const tasks = todayTasks().filter(t=> toMin(t.start)!=null);
+  const allday = todayTasks().filter(t=> toMin(t.start)==null);
+  const nowMin = new Date().getHours()*60 + new Date().getMinutes();
+  let hours = "";
+  for(let h=0; h<24; h++){
+    hours += `<div class="tl-hour" data-action="tl-new" data-hour="${h}"><span class="h">${pad(h)}:00</span></div>`;
+  }
+  const blocks = tasks.map((t,i)=>{
+    const s = toMin(t.start), e = toMin(t.end)!=null ? toMin(t.end) : s+60;
+    const top = s/60*TL_H, h = Math.max(20, (e-s)/60*TL_H);
+    return `<div class="tl-block ${t.done?"done":""}" data-action="tl-toggle" data-id="${t.id}"
+      style="top:${top}px;height:${h}px;background:${TASK_COLORS[i%TASK_COLORS.length]}">
+      ${esc(t.start)} ${esc(t.title)}</div>`;
+  }).join("");
+  $("#page-timeline").innerHTML = `
+    <h1 class="page-title">时间段</h1>
+    <p class="page-sub">一天 24 小时 · 点击空白时段快速新建 · 点击色块标记完成</p>
+    ${allday.length ? `<div class="tl-allday">全天任务：${allday.map(t=>esc(t.title)).join("、")}</div>` : ""}
+    <div class="tl-wrap"><div class="tl">
+      ${hours}${blocks}
+      <div class="tl-now" style="top:${nowMin/60*TL_H}px"></div>
+    </div></div>`;
+}
+
+/* ---------- 学习目标 ---------- */
+function renderGoals(){
+  $("#page-goals").innerHTML = `
+    <h1 class="page-title">学习目标 / 工作目标</h1>
+    <p class="page-sub">设定长期目标，追踪进度</p>
+    <div class="card">
+      <div class="task-form">
+        <input type="text" id="g-name" placeholder="目标名称，如：学完英语语法" style="flex:2;min-width:160px">
+        <select id="g-type"><option value="learn">学习</option><option value="work">工作</option></select>
+        <input type="date" id="g-deadline">
+        <button class="btn" data-action="add-goal">新建目标</button>
+      </div>
+    </div>
+    ${DB.goals.length ? DB.goals.map(g=>`
+      <div class="card goal-card">
+        <div class="top">
+          <span class="tag">${g.type==="learn"?"学习":"工作"}</span>
+          <span class="name">${esc(g.name)}</span>
+          <span class="small muted">截止 ${esc(g.deadline||"未定")}</span>
+          <button class="btn-mini" data-action="del-goal" data-id="${g.id}">删除</button>
+        </div>
+        <input type="range" min="0" max="100" value="${g.progress}" data-change="goal-progress" data-id="${g.id}">
+        <p class="small muted" style="margin:4px 0 8px">进度 ${g.progress}%</p>
+        ${g.subgoals.map(s=>`
+          <div class="subgoal ${s.done?"done":""}">
+            <input type="checkbox" data-change="sub-toggle" data-gid="${g.id}" data-id="${s.id}" ${s.done?"checked":""}>
+            <span class="sg-t">${esc(s.text)}</span>
+            <button class="btn-mini" data-action="del-sub" data-gid="${g.id}" data-id="${s.id}">×</button>
+          </div>`).join("")}
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <input type="text" id="sg-${g.id}" placeholder="添加子目标…" style="flex:1">
+          <button class="btn-ghost" data-action="add-sub" data-id="${g.id}">添加</button>
+        </div>
+      </div>`).join("") : '<div class="card"><p class="empty">还没有目标，从上方新建一个吧</p></div>'}`;
+}
+
+/* ---------- 健身 ---------- */
+function renderFitness(){
+  const k = todayKey();
+  const mood = DB.moods[k], weather = DB.weather[k];
+  const rec = recommend(mood && mood.level, weather);
+  const f = DB.fitness[k] || {content:"", minutes:"", checked:false};
+  const dots = [];
+  for(let i=6; i>=0; i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const dk = keyOf(d);
+    dots.push(`<div class="dot ${DB.fitness[dk] && DB.fitness[dk].checked ? "on":""}">${d.getDate()}</div>`);
+  }
+  $("#page-fitness").innerHTML = `
+    <h1 class="page-title">健身计划</h1>
+    <p class="page-sub">AI 根据心情与天气推荐今日运动</p>
+    <div class="rec-card">
+      <h3>✨ 今日推荐</h3>
+      ${rec ? `<p style="font-size:15px;font-weight:600">${esc(rec.fitness.text)}</p>
+        <p class="reason">推荐理由：${esc(rec.fitness.reason)}</p>` :
+        '<p class="empty">请先在首页或心情页打卡今日心情，并选择天气</p>'}
+    </div>
+    <div class="card">
+      <h3>今日运动记录 ${f.checked ? '<span class="tag">已打卡 ✓</span>' : ""}</h3>
+      <div class="task-form">
+        <input type="text" id="f-content" placeholder="做了什么运动？" value="${esc(f.content)}" style="flex:2;min-width:160px">
+        <input type="number" id="f-minutes" placeholder="时长(分钟)" value="${esc(f.minutes)}" style="width:110px">
+        <label class="small"><input type="checkbox" data-change="fit-check" ${f.checked?"checked":""}> 完成打卡</label>
+        <button class="btn" data-action="save-fit">保存</button>
+      </div>
+    </div>
+    <div class="card"><h3>本周打卡</h3><div class="dots">${dots.join("")}</div></div>`;
+}
+
+/* ---------- 饮食 ---------- */
+function renderDiet(){
+  const k = todayKey();
+  const mood = DB.moods[k], weather = DB.weather[k];
+  const rec = recommend(mood && mood.level, weather);
+  const d = DB.diet[k] || {breakfast:"", lunch:"", dinner:""};
+  $("#page-diet").innerHTML = `
+    <h1 class="page-title">饮食计划</h1>
+    <p class="page-sub">AI 三餐建议 + 记录实际饮食</p>
+    <div class="rec-card">
+      <h3>✨ 今日三餐建议</h3>
+      ${rec ? `
+        <p>🍳 早餐：${esc(rec.diet.meals.b)}</p>
+        <p style="margin-top:4px">🍱 午餐：${esc(rec.diet.meals.l)}</p>
+        <p style="margin-top:4px">🍲 晚餐：${esc(rec.diet.meals.d)}</p>
+        <p class="reason">推荐理由：${esc(rec.diet.reason)}</p>` :
+        '<p class="empty">请先在首页或心情页打卡今日心情，并选择天气</p>'}
+    </div>
+    <div class="card">
+      <h3>实际吃了什么</h3>
+      <div style="display:grid;gap:10px">
+        <label class="small muted">早餐<input type="text" style="width:100%;margin-top:4px" data-change="diet" data-meal="breakfast" value="${esc(d.breakfast)}" placeholder="记录早餐…"></label>
+        <label class="small muted">午餐<input type="text" style="width:100%;margin-top:4px" data-change="diet" data-meal="lunch" value="${esc(d.lunch)}" placeholder="记录午餐…"></label>
+        <label class="small muted">晚餐<input type="text" style="width:100%;margin-top:4px" data-change="diet" data-meal="dinner" value="${esc(d.dinner)}" placeholder="记录晚餐…"></label>
+      </div>
+      <p class="small muted" style="margin-top:8px">输入后自动保存</p>
+    </div>`;
+}
+
+/* ---------- 游戏娱乐 ---------- */
+function renderFun(){
+  const k = todayKey();
+  const mood = DB.moods[k], weather = DB.weather[k];
+  const rec = recommend(mood && mood.level, weather);
+  const list = DB.fun[k] || [];
+  $("#page-fun").innerHTML = `
+    <h1 class="page-title">游戏娱乐</h1>
+    <p class="page-sub">规划娱乐时间，张弛有度</p>
+    <div class="rec-card">
+      <h3>✨ 今日娱乐推荐</h3>
+      ${rec ? `<p style="font-size:15px;font-weight:600">${esc(rec.fun.text)}</p>
+        <p class="reason">推荐理由：${esc(rec.fun.reason)}</p>` :
+        '<p class="empty">请先在首页或心情页打卡今日心情，并选择天气</p>'}
+    </div>
+    <div class="card">
+      <div class="task-form">
+        <input type="text" id="fun-content" placeholder="想怎么放松？如：看电影" style="flex:2;min-width:160px">
+        <input type="time" id="fun-start">
+        <span class="muted">至</span>
+        <input type="time" id="fun-end">
+        <button class="btn" data-action="add-fun">添加娱乐计划</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>娱乐计划</h3>
+      ${list.length ? list.map(f=>`
+        <div class="fun-item ${f.done?"done":""}">
+          <input type="checkbox" data-change="fun-toggle" data-id="${f.id}" ${f.done?"checked":""}>
+          <span class="c">${f.start?esc(f.start):"--:--"} - ${f.end?esc(f.end):"--:--"} · ${esc(f.content)}</span>
+          <input type="text" class="small" style="width:160px" placeholder="一句感受…" data-change="fun-feeling" data-id="${f.id}" value="${esc(f.feeling)}">
+          <button class="btn-mini" data-action="del-fun" data-id="${f.id}">删除</button>
+        </div>`).join("") : '<p class="empty">还没有娱乐计划</p>'}
+    </div>`;
+}
+
+/* ---------- 清晨心情 ---------- */
+function renderMood(){
+  const k = todayKey();
+  const mood = DB.moods[k];
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const first = new Date(y, m, 1).getDay();
+  const days = new Date(y, m+1, 0).getDate();
+  let cells = "";
+  ["日","一","二","三","四","五","六"].forEach(w=> cells += `<div class="wd">${w}</div>`);
+  for(let i=0; i<first; i++) cells += '<div class="day blank"></div>';
+  for(let d=1; d<=days; d++){
+    const dk = y+"-"+pad(m+1)+"-"+pad(d);
+    const rec = DB.moods[dk];
+    const mm = rec ? MOODS.find(x=>x.level===rec.level) : null;
+    cells += `<div class="day ${dk===k?"today":""}" data-action="cal-day" data-date="${dk}"
+      style="${mm?`background:${mm.color};color:#fff`:""}">${d}</div>`;
+  }
+  $("#page-mood").innerHTML = `
+    <h1 class="page-title">今日清晨心情</h1>
+    <p class="page-sub">每天早上打卡一次，记录自己的心情曲线</p>
+    <div class="card">
+      <h3>${mood ? "今天的心情：" + MOODS.find(x=>x.level===mood.level).emoji + " " + MOODS.find(x=>x.level===mood.level).label : "今天还没打卡"}</h3>
+      <div class="pick-row" style="margin-bottom:12px">${MOODS.map(mm=>`
+        <button class="pick-btn ${mood && mood.level===mm.level ? "sel":""}" data-action="set-mood" data-level="${mm.level}">
+          ${mm.emoji}<span class="lbl">${mm.label}</span></button>`).join("")}
+      </div>
+      <textarea id="mood-note" rows="2" style="width:100%" placeholder="一句话记录此刻…">${mood?esc(mood.note):""}</textarea>
+      <button class="btn" style="margin-top:8px" data-action="save-mood-note">保存日记</button>
+      <p class="small muted" id="mood-view" style="margin-top:10px"></p>
+    </div>
+    <div class="card">
+      <h3>${y} 年 ${m+1} 月心情日历</h3>
+      <div class="cal">${cells}</div>
+    </div>`;
+}
+
+/* ---------- 数据与设置 ---------- */
+function renderSettings(){
+  const rate = completionRate();
+  const streak = calcStreak();
+  const moodDays = Object.keys(DB.moods).length;
+  const chart = last14Moods().map(d=>`
+    <div class="bar"><div class="b" style="height:${d.level? d.level/5*80 : 3}px;${d.level?"":"background:var(--line)"}"></div>
+    <span class="d">${d.label}</span></div>`).join("");
+  const supportFS = "showSaveFilePicker" in window;
+  $("#page-settings").innerHTML = `
+    <h1 class="page-title">数据与设置</h1>
+    <p class="page-sub">统计一览 · 数据备份与恢复</p>
+    <div class="stat-grid">
+      <div class="stat"><div class="num">${rate ? rate.pct+"%" : "--"}</div><div class="lbl">今日任务完成率${rate?`（${rate.done}/${rate.total}）`:""}</div></div>
+      <div class="stat"><div class="num">${streak}</div><div class="lbl">连续心情打卡天数</div></div>
+      <div class="stat"><div class="num">${moodDays}</div><div class="lbl">累计心情记录天数</div></div>
+    </div>
+    <div class="card">
+      <h3>近 14 天心情</h3>
+      <div class="chart">${chart}</div>
+    </div>
+    <div class="card">
+      <h3>数据管理</h3>
+      <p class="small muted" style="margin-bottom:12px">所有数据保存在本机浏览器中；建议绑定一个本地文件做实时备份，或定期导出备份。</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${supportFS ? '<button class="btn" data-action="bind-file">绑定本地数据文件</button>' : ""}
+        <button class="btn-ghost" data-action="export">导出备份（JSON）</button>
+        <label class="btn-ghost" style="display:inline-block">从备份恢复
+          <input type="file" id="import-file" accept=".json" data-change="import-file" style="display:none">
+        </label>
+        <button class="btn-danger" data-action="clear-all">清空全部数据</button>
+      </div>
+      <p class="small muted" id="bind-status" style="margin-top:10px">${supportFS ? (fileHandle ? "已绑定文件，改动会自动写入" : "未绑定文件（绑定后每次改动自动保存到该文件）") : "当前浏览器不支持绑定本地文件，请使用导出/恢复做备份"}</p>
+    </div>`;
+}
+
+/* ================= 事件处理 ================= */
+document.addEventListener("click", async e=>{
+  const el = e.target.closest("[data-action]");
+  if(!el) return;
+  const a = el.dataset.action, id = el.dataset.id;
+  const k = todayKey();
+
+  switch(a){
+    case "nav": showPage(el.dataset.page); break;
+
+    /* 心情 & 天气 */
+    case "quick-mood": case "set-mood": {
+      const level = +el.dataset.level;
+      DB.moods[k] = { level, note: (DB.moods[k] ? DB.moods[k].note : "") };
+      save(); renderAll(); break;
+    }
+    case "save-mood-note": {
+      const note = $("#mood-note").value.trim();
+      DB.moods[k] = { level: DB.moods[k] ? DB.moods[k].level : 3, note };
+      save(); renderAll(); break;
+    }
+    case "set-weather": DB.weather[k] = el.dataset.w; save(); renderAll(); break;
+    case "cal-day": {
+      const dk = el.dataset.date, r = DB.moods[dk];
+      $("#mood-view").textContent = r
+        ? dk + "：" + MOODS.find(x=>x.level===r.level).emoji + " " + MOODS.find(x=>x.level===r.level).label + (r.note ? " · " + r.note : "")
+        : dk + "：没有记录";
+      break;
+    }
+
+    /* 备忘 */
+    case "add-memo": {
+      const v = $("#memo-input").value.trim();
+      if(!v) break;
+      DB.memos.push({id:uid(), text:v, time:Date.now()});
+      save(); renderAll(); break;
+    }
+    case "del-memo":
+      if(ask("确定删除这条备忘吗？")){ DB.memos = DB.memos.filter(m=>m.id!==id); save(); renderAll(); }
+      break;
+
+    /* 今日计划 */
+    case "add-task": {
+      const title = $("#t-title").value.trim();
+      if(!title) break;
+      const t = { title, start:$("#t-start").value, end:$("#t-end").value, memo:$("#t-memo").value.trim() };
+      if(!DB.tasks[k]) DB.tasks[k] = [];
+      if(editingTaskId){
+        const it = DB.tasks[k].find(x=>x.id===editingTaskId);
+        if(it) Object.assign(it, t);
+        editingTaskId = null;
+      } else {
+        DB.tasks[k].push(Object.assign({id:uid(), done:false}, t));
+      }
+      save(); renderAll(); break;
+    }
+    case "edit-task": {
+      const it = (DB.tasks[k]||[]).find(x=>x.id===id);
+      if(!it) break;
+      editingTaskId = id;
+      renderTasks();
+      $("#t-title").value = it.title; $("#t-start").value = it.start||""; $("#t-end").value = it.end||""; $("#t-memo").value = it.memo||"";
+      break;
+    }
+    case "cancel-edit": editingTaskId = null; renderTasks(); break;
+    case "del-task":
+      if(ask("确定删除这条任务吗？")){ DB.tasks[k] = (DB.tasks[k]||[]).filter(t=>t.id!==id); save(); renderAll(); }
+      break;
+
+    /* 时间轴 */
+    case "tl-new": {
+      editingTaskId = null;
+      showPage("tasks");
+      const h = pad(+el.dataset.hour);
+      $("#t-start").value = h+":00";
+      $("#t-end").value = pad(Math.min(23,(+el.dataset.hour)+1))+":00";
+      $("#t-title").focus();
+      break;
+    }
+    case "tl-toggle": {
+      const it = (DB.tasks[k]||[]).find(x=>x.id===id);
+      if(it){ it.done = !it.done; save(); renderAll(); }
+      break;
+    }
+
+    /* 目标 */
+    case "add-goal": {
+      const name = $("#g-name").value.trim();
+      if(!name) break;
+      DB.goals.push({id:uid(), name, type:$("#g-type").value, deadline:$("#g-deadline").value, progress:0, subgoals:[]});
+      save(); renderAll(); break;
+    }
+    case "del-goal":
+      if(ask("确定删除这个目标吗？")){ DB.goals = DB.goals.filter(g=>g.id!==id); save(); renderAll(); }
+      break;
+    case "add-sub": {
+      const g = DB.goals.find(x=>x.id===id);
+      const inp = $("#sg-"+id);
+      const v = inp.value.trim();
+      if(!g || !v) break;
+      g.subgoals.push({id:uid(), text:v, done:false});
+      save(); renderAll(); break;
+    }
+    case "del-sub": {
+      const g = DB.goals.find(x=>x.id===el.dataset.gid);
+      if(g){ g.subgoals = g.subgoals.filter(s=>s.id!==id); save(); renderAll(); }
+      break;
+    }
+
+    /* 健身 */
+    case "save-fit": {
+      DB.fitness[k] = {
+        content: $("#f-content").value.trim(),
+        minutes: $("#f-minutes").value,
+        checked: DB.fitness[k] ? DB.fitness[k].checked : false
+      };
+      save(); renderAll(); break;
+    }
+
+    /* 娱乐 */
+    case "add-fun": {
+      const c = $("#fun-content").value.trim();
+      if(!c) break;
+      if(!DB.fun[k]) DB.fun[k] = [];
+      DB.fun[k].push({id:uid(), content:c, start:$("#fun-start").value, end:$("#fun-end").value, done:false, feeling:""});
+      save(); renderAll(); break;
+    }
+    case "del-fun":
+      if(ask("确定删除这条娱乐计划吗？")){ DB.fun[k] = (DB.fun[k]||[]).filter(f=>f.id!==id); save(); renderAll(); }
+      break;
+
+    /* 数据管理 */
+    case "export": {
+      try {
+        const blob = new Blob([exportJSON()], {type:"application/json"});
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "我的生活备份-" + k.replace(/-/g,"") + ".json";
+        link.click();
+      } catch(err){ alert("导出失败，请重试"); }
+      break;
+    }
+    case "bind-file": {
+      try {
+        fileHandle = await window.showSaveFilePicker({ suggestedName:"我的生活数据.json" });
+        await writeToFile();
+        renderAll();
+      } catch(err){ /* 用户取消 */ }
+      break;
+    }
+    case "clear-all":
+      if(ask("确定清空全部数据吗？此操作不可恢复！建议先导出备份。")){
+        if(ask("再次确认：真的要删除所有数据吗？")){
+          DB = blank(); save(); renderAll();
+        }
+      }
+      break;
+  }
+});
+
+document.addEventListener("change", e=>{
+  const el = e.target.closest("[data-change]");
+  if(!el) return;
+  const c = el.dataset.change, id = el.dataset.id;
+  const k = todayKey();
+  switch(c){
+    case "toggle-task": {
+      const it = (DB.tasks[k]||[]).find(x=>x.id===id);
+      if(it){ it.done = el.checked; save(); renderAll(); }
+      break;
+    }
+    case "goal-progress": {
+      const g = DB.goals.find(x=>x.id===id);
+      if(g){ g.progress = +el.value; save(); renderAll(); }
+      break;
+    }
+    case "sub-toggle": {
+      const g = DB.goals.find(x=>x.id===el.dataset.gid);
+      const s = g && g.subgoals.find(x=>x.id===id);
+      if(s){ s.done = el.checked; save(); renderAll(); }
+      break;
+    }
+    case "fit-check": {
+      if(!DB.fitness[k]) DB.fitness[k] = {content:"", minutes:"", checked:false};
+      DB.fitness[k].checked = el.checked;
+      save(); renderAll(); break;
+    }
+    case "diet": {
+      if(!DB.diet[k]) DB.diet[k] = {breakfast:"", lunch:"", dinner:""};
+      DB.diet[k][el.dataset.meal] = el.value.trim();
+      save(); break;
+    }
+    case "fun-toggle": {
+      const it = (DB.fun[k]||[]).find(x=>x.id===id);
+      if(it){ it.done = el.checked; save(); renderAll(); }
+      break;
+    }
+    case "fun-feeling": {
+      const it = (DB.fun[k]||[]).find(x=>x.id===id);
+      if(it){ it.feeling = el.value.trim(); save(); }
+      break;
+    }
+    case "import-file": {
+      const file = el.files && el.files[0];
+      if(!file) break;
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        if(importData(reader.result)) alert("恢复成功！");
+        else alert("备份文件无效，未做任何更改。");
+      };
+      reader.readAsText(file);
+      break;
+    }
+  }
+});
+
+/* 时间轴"现在"指示线每分钟刷新 */
+setInterval(()=>{ if(currentPage==="timeline") renderTimeline(); }, 60000);
+
+/* 暴露给测试 */
+window.__app = {
+  get DB(){ return DB; },
+  recommend, exportJSON, importData, calcStreak, completionRate, todayKey, keyOf,
+  showPage, blank
+};
+
+renderAll();
+</script>
+</body>
+</html>

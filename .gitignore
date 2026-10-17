@@ -1,0 +1,8 @@
+# 依赖与缓存
+node_modules/
+*.log
+
+# 系统文件
+Thumbs.db
+.DS_Store
+desktop.ini
