@@ -24,7 +24,7 @@
   .nav-foot { margin-top:auto; font-size:11px; color:var(--muted); padding:0 12px; line-height:1.7; }
 
   /* ===== 主区 ===== */
-  main { flex:1; padding:26px 32px 60px; max-width:1080px; }
+  main { flex:1; padding:26px 32px 80px; max-width:1080px; }
   .page { display:none; }
   .page.active { display:block; }
   h1.page-title { font-size:22px; margin-bottom:4px; }
@@ -45,7 +45,7 @@
   .btn-mini { background:none; border:none; color:var(--muted); font-size:12px; padding:2px 6px; border-radius:6px; }
   .btn-mini:hover { background:var(--brand-soft); color:var(--brand); }
 
-  input[type=text], input[type=time], input[type=date], input[type=number], textarea, select {
+  input[type=text], input[type=date], input[type=number], textarea, select {
     font-family:inherit; font-size:13px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink);
   }
   input:focus, textarea:focus { outline:2px solid var(--brand-soft); border-color:var(--brand); }
@@ -53,7 +53,15 @@
   .muted { color:var(--muted); }
   .small { font-size:12px; }
   .tag { display:inline-block; background:var(--brand-soft); color:var(--brand); border-radius:6px; padding:2px 8px; font-size:12px; }
+  .tag.green { background:#e6f7ef; color:#1d9e75; }
   .empty { color:var(--muted); font-size:13px; padding:14px 0; text-align:center; }
+
+  /* 全局保存按钮 */
+  #save-bar { position:fixed; right:26px; bottom:22px; display:flex; align-items:center; gap:10px; z-index:40; }
+  #global-save { background:var(--brand); color:#fff; border:none; border-radius:24px; padding:11px 22px; font-size:14px; box-shadow:0 4px 14px rgba(108,124,247,.35); }
+  #global-save:hover { opacity:.9; }
+  #save-tip { font-size:12px; color:var(--muted); background:#fff; border:1px solid var(--line); border-radius:14px; padding:5px 12px; opacity:0; transition:opacity .3s; }
+  #save-tip.show { opacity:1; }
 
   /* 心情/天气选择 */
   .pick-row { display:flex; gap:10px; }
@@ -61,6 +69,30 @@
   .pick-btn .lbl { display:block; font-size:11px; color:var(--muted); margin-top:2px; }
   .pick-btn.sel { border-color:var(--brand); background:var(--brand-soft); }
   .pick-btn.w { font-size:18px; }
+
+  /* 心情动画 */
+  @keyframes pop { 0%{transform:scale(1)} 40%{transform:scale(1.35) rotate(-8deg)} 70%{transform:scale(.92)} 100%{transform:scale(1)} }
+  .pick-btn.pop { animation:pop .5s ease; }
+  @keyframes burst { to { transform:translate(var(--dx),var(--dy)) scale(.4); opacity:0; } }
+  .particle { position:fixed; width:8px; height:8px; border-radius:50%; pointer-events:none; z-index:60; animation:burst .8s ease-out forwards; }
+
+  /* Apple 闹钟式滚轮选择器 */
+  .wheel-overlay { position:fixed; inset:0; background:rgba(0,0,0,.35); display:flex; align-items:flex-end; justify-content:center; z-index:50; }
+  .wheel-sheet { background:#fff; border-radius:16px 16px 0 0; padding:14px 18px 22px; width:320px; }
+  .wheel-title { text-align:center; font-weight:600; margin-bottom:8px; }
+  .wheel-cols { display:flex; justify-content:center; gap:6px; position:relative; }
+  .wheel-cols::before { content:""; position:absolute; left:0; right:0; top:72px; height:36px; background:var(--brand-soft); border-radius:8px; pointer-events:none; }
+  .wheel-col { height:180px; overflow-y:auto; scroll-snap-type:y mandatory; padding:72px 0; scrollbar-width:none; }
+  .wheel-col::-webkit-scrollbar { display:none; }
+  .wheel-item { height:36px; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; font-size:15px; color:var(--muted); cursor:pointer; min-width:64px; }
+  .wheel-item.cur { color:var(--ink); font-weight:600; font-size:17px; }
+  .wheel-actions { display:flex; gap:10px; margin-top:12px; }
+  .wheel-actions button { flex:1; }
+
+  /* 时间/时长按钮（点击弹出滚轮） */
+  .time-btn { background:#fff; border:1px solid var(--line); border-radius:8px; padding:8px 14px; font-size:14px; color:var(--ink); min-width:78px; text-align:center; font-variant-numeric:tabular-nums; }
+  .time-btn:hover { border-color:var(--brand); color:var(--brand); }
+  .time-btn.empty { color:var(--muted); }
 
   /* 任务列表 */
   .task-form { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
@@ -92,17 +124,25 @@
   .subgoal { display:flex; align-items:center; gap:8px; padding:4px 0; font-size:13px; }
   .subgoal.done .sg-t { text-decoration:line-through; color:var(--muted); }
 
-  /* 心情日历 */
+  /* 运动标签 */
+  .tag-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .tag-chip { border:1px solid var(--line); background:#fff; border-radius:16px; padding:5px 14px; font-size:13px; cursor:pointer; }
+  .tag-chip:hover { border-color:var(--brand); color:var(--brand); }
+  .tag-chip.sel { background:var(--brand); color:#fff; border-color:var(--brand); }
+
+  /* 运动记录条目 */
+  .fit-entry { display:flex; align-items:center; gap:8px; padding:9px 4px; border-bottom:1px solid var(--line); font-size:13px; flex-wrap:wrap; }
+  .fit-entry:last-child { border-bottom:none; }
+  .fit-entry .min { margin-left:auto; color:var(--brand); font-weight:600; }
+
+  /* 心情日历 / 通用月历 */
   .cal { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
   .cal .wd { text-align:center; font-size:11px; color:var(--muted); padding:4px 0; }
-  .cal .day { text-align:center; font-size:12px; padding:8px 0; border-radius:8px; background:var(--bg); cursor:pointer; }
+  .cal .day { text-align:center; font-size:12px; padding:8px 0; border-radius:8px; background:var(--bg); cursor:pointer; min-height:34px; }
   .cal .day.blank { background:none; cursor:default; }
   .cal .day.today { outline:2px solid var(--brand); }
-
-  /* 打卡圆点 */
-  .dots { display:flex; gap:8px; }
-  .dot { width:26px; height:26px; border-radius:50%; background:var(--bg); display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--muted); }
-  .dot.on { background:var(--green); color:#fff; }
+  .cal .day .sub { display:block; font-size:10px; margin-top:2px; color:var(--brand); font-weight:600; }
+  .day-detail { margin-top:12px; background:var(--bg); border-radius:10px; padding:12px 14px; font-size:13px; }
 
   /* 心情统计图 */
   .chart { display:flex; align-items:flex-end; gap:6px; height:110px; padding-top:10px; }
@@ -120,10 +160,15 @@
   .memo-item:last-child { border-bottom:none; }
   .memo-item .t { flex:1; }
 
-  .fun-item { display:flex; align-items:center; gap:10px; padding:9px 4px; border-bottom:1px solid var(--line); }
-  .fun-item:last-child { border-bottom:none; }
-  .fun-item .c { flex:1; }
-  .fun-item.done .c { text-decoration:line-through; color:var(--muted); }
+  /* 游戏卡片 */
+  .game-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; }
+  .game-card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 16px; position:relative; transition:.15s; }
+  .game-card:hover { border-color:var(--brand); }
+  .game-card.done { opacity:.55; }
+  .game-card.done .gn { text-decoration:line-through; }
+  .game-card .gn { font-weight:600; font-size:15px; margin-bottom:8px; }
+  .game-card .gi { font-size:12px; color:var(--muted); line-height:1.8; }
+  .game-card .ops { display:flex; align-items:center; gap:6px; margin-top:10px; }
 
   .rec-card { background:linear-gradient(135deg,#f3f5ff,#fdf6ec); border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin-bottom:14px; }
   .rec-card .reason { font-size:12px; color:var(--muted); margin-top:6px; }
@@ -155,6 +200,10 @@
     <section class="page" id="page-mood"></section>
     <section class="page" id="page-settings"></section>
   </main>
+</div>
+<div id="save-bar">
+  <span id="save-tip"></span>
+  <button id="global-save" data-action="save-all">💾 保存</button>
 </div>
 
 <script>
@@ -211,6 +260,7 @@ function uid(){ return Date.now().toString(36) + Math.random().toString(36).slic
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function toMin(t){ if(!t) return null; const p=t.split(":"); return (+p[0])*60 + (+p[1]); }
 function ask(msg){ return window.confirm(msg); }
+function fmtDur(min){ min = Math.max(0, min|0); const h=Math.floor(min/60), m=min%60; return h>0 ? h+" 小时" + (m? " "+m+" 分":"") : m+" 分钟"; }
 
 const MOODS = [
   {level:5, label:"很好", emoji:"😄", color:"#2fbf71"},
@@ -221,6 +271,8 @@ const MOODS = [
 ];
 const WEATHERS = { sunny:"☀️ 晴", cloudy:"⛅ 阴", rainy:"🌧️ 雨", snowy:"❄️ 雪" };
 const TASK_COLORS = ["#6c7cf7","#34c88a","#f7a94c","#e067b0","#4cb8f7","#9b7ff7"];
+const FIT_TAGS = ["跑步","力量","瑜伽","拉伸","游泳","骑行","散步","球类"];
+const FIT_PARTS = ["全身","胸","背","腿","肩","手臂","核心","有氧"];
 
 /* ================= AI 推荐引擎（本地规则） ================= */
 function recommend(mood, weather){
@@ -267,9 +319,9 @@ function recommend(mood, weather){
 
   const funTable = {
     5:"约朋友打球、唱歌，趁好心情好好嗨一下",
-    4:"看一部喜欢的电影，或打一会儿游戏",
-    3:"听音乐 + 轻松休闲 30 分钟",
-    2:"看轻松喜剧或搞笑视频，治愈一下自己",
+    4:"玩一会儿喜欢的游戏，或看部电影",
+    3:"听音乐 + 轻松小游戏 30 分钟",
+    2:"玩轻松的休闲游戏或看搞笑视频，治愈一下自己",
     1:"泡个热水澡，听舒缓音乐，早点休息"
   };
   const funReason = {
@@ -301,7 +353,7 @@ function completionRate(){
 function calcStreak(){
   let s = 0;
   const cur = new Date();
-  if(!DB.moods[keyOf(cur)]) cur.setDate(cur.getDate()-1); // 今天还没打卡则从昨天算起
+  if(!DB.moods[keyOf(cur)]) cur.setDate(cur.getDate()-1);
   while(DB.moods[keyOf(cur)]){ s++; cur.setDate(cur.getDate()-1); }
   return s;
 }
@@ -315,10 +367,153 @@ function last14Moods(){
   return arr;
 }
 
+/* ================= 健身 / 娱乐数据访问（含旧数据迁移） ================= */
+function fitDay(k){
+  if(!DB.fitness[k] || Array.isArray(DB.fitness[k].entries) === false){
+    DB.fitness[k] = { goalMin:60, entries:[] };
+  }
+  if(DB.fitness[k].goalMin == null) DB.fitness[k].goalMin = 60;
+  return DB.fitness[k];
+}
+function fitTotal(k){ return fitDay(k).entries.reduce((s,e)=> s + Math.max(0, e.minutes|0), 0); }
+function funDay(k){
+  if(!DB.fun[k]) DB.fun[k] = [];
+  DB.fun[k].forEach(f=>{
+    if(f.name === undefined) f.name = f.content || "";
+    if(f.minutes === undefined) f.minutes = 0;
+  });
+  return DB.fun[k];
+}
+
+/* ================= 滚轮选择器（Apple 闹钟式） ================= */
+const WHEEL_ITEM_H = 36;
+function openWheel(opts){
+  // opts: {title, columns:[{values:[...], index}], onDone(values)}
+  closeWheel();
+  const ov = document.createElement("div");
+  ov.className = "wheel-overlay"; ov.id = "wheel-ov";
+  const colsHtml = opts.columns.map((c,ci)=>
+    `<div class="wheel-col" data-ci="${ci}">${c.values.map((v,i)=>
+      `<div class="wheel-item" data-i="${i}">${esc(String(v))}</div>`).join("")}</div>`).join("");
+  ov.innerHTML = `<div class="wheel-sheet">
+    <div class="wheel-title">${esc(opts.title)}</div>
+    <div class="wheel-cols">${colsHtml}</div>
+    <div class="wheel-actions">
+      <button class="btn-ghost" id="wh-cancel">取消</button>
+      <button class="btn" id="wh-ok">确定</button>
+    </div></div>`;
+  document.body.appendChild(ov);
+
+  function mark(col){
+    const i = Math.max(0, Math.round(col.scrollTop / WHEEL_ITEM_H));
+    col.querySelectorAll(".wheel-item").forEach(el=> el.classList.toggle("cur", +el.dataset.i === i));
+  }
+  function scrollCol(col, i){
+    if(typeof col.scrollTo === "function"){
+      try { col.scrollTo({top:i*WHEEL_ITEM_H, behavior:"smooth"}); } catch(e){ col.scrollTop = i*WHEEL_ITEM_H; }
+    } else { col.scrollTop = i*WHEEL_ITEM_H; }
+    mark(col);
+  }
+  opts.columns.forEach((c,ci)=>{
+    const col = ov.querySelector(`.wheel-col[data-ci="${ci}"]`);
+    col.scrollTop = (c.index||0) * WHEEL_ITEM_H;
+    mark(col);
+    col.addEventListener("scroll", ()=>{
+      clearTimeout(col._wt);
+      col._wt = setTimeout(()=> scrollCol(col, Math.round(col.scrollTop/WHEEL_ITEM_H)), 120);
+    });
+    col.addEventListener("click", e=>{
+      const it = e.target.closest(".wheel-item");
+      if(it) scrollCol(col, +it.dataset.i);
+    });
+  });
+  ov.querySelector("#wh-cancel").addEventListener("click", closeWheel);
+  ov.addEventListener("click", e=>{ if(e.target === ov) closeWheel(); });
+  ov.querySelector("#wh-ok").addEventListener("click", ()=>{
+    const vals = [...ov.querySelectorAll(".wheel-col")].map(col=>{
+      const ci = +col.dataset.ci;
+      const i = Math.max(0, Math.min(opts.columns[ci].values.length-1, Math.round(col.scrollTop / WHEEL_ITEM_H)));
+      return opts.columns[ci].values[i];
+    });
+    closeWheel();
+    opts.onDone(vals);
+  });
+}
+function closeWheel(){ const o = document.getElementById("wheel-ov"); if(o) o.remove(); }
+
+/* 时间滚轮：时 0-23 + 分 0-59 */
+function openTimeWheel(btn){
+  const cur = btn.dataset.value || "08:00";
+  const [ch, cm] = cur.split(":");
+  const hours = [], mins = [];
+  for(let i=0;i<24;i++) hours.push(pad(i));
+  for(let i=0;i<60;i++) mins.push(pad(i));
+  openWheel({
+    title: "选择时间",
+    columns: [ {values:hours, index:+ch||0}, {values:mins, index:+cm||0} ],
+    onDone(vals){
+      btn.dataset.value = vals[0] + ":" + vals[1];
+      btn.textContent = btn.dataset.value;
+      btn.classList.remove("empty");
+    }
+  });
+}
+/* 时长滚轮：小时 0-4 + 分钟 0/10/20/30/40/50（不可能为负） */
+function openDurWheel(btn, title){
+  const cur = Math.max(0, parseInt(btn.dataset.value || "30", 10));
+  const hours = [], mins = ["0","10","20","30","40","50"];
+  for(let i=0;i<=4;i++) hours.push(String(i));
+  const mi = Math.max(0, mins.indexOf(String(cur % 60)));
+  openWheel({
+    title: title || "选择时长",
+    columns: [ {values:hours.map(h=>h+" 小时"), index:Math.min(4, Math.floor(cur/60))}, {values:mins.map(m=>m+" 分"), index:mi} ],
+    onDone(vals){
+      const total = Math.max(0, parseInt(vals[0])*60 + parseInt(vals[1]));
+      btn.dataset.value = String(total);
+      btn.textContent = fmtDur(total);
+      btn.classList.remove("empty");
+      if(btn.dataset.key === "fit-goal"){
+        fitDay(todayKey()).goalMin = total;
+        save(); renderAll();
+      }
+    }
+  });
+}
+function timeBtn(key, val, placeholder){
+  const empty = !val;
+  return `<button class="time-btn ${empty?"empty":""}" data-action="wheel-time" data-key="${key}" data-value="${esc(val||"")}">${empty?placeholder:esc(val)}</button>`;
+}
+function durBtn(key, val){
+  return `<button class="time-btn" data-action="wheel-dur" data-key="${key}" data-value="${Math.max(0,val|0)}">${fmtDur(val)}</button>`;
+}
+
+/* ================= 心情动画 ================= */
+function playMoodAnim(btn, color){
+  btn.classList.remove("pop");
+  void btn.offsetWidth; // 重启动画
+  btn.classList.add("pop");
+  const r = btn.getBoundingClientRect();
+  const cx = r.left + r.width/2, cy = r.top + r.height/2;
+  for(let i=0;i<10;i++){
+    const p = document.createElement("div");
+    p.className = "particle";
+    const ang = (Math.PI*2/10)*i + Math.random()*0.5;
+    const dist = 46 + Math.random()*36;
+    p.style.setProperty("--dx", Math.cos(ang)*dist + "px");
+    p.style.setProperty("--dy", Math.sin(ang)*dist + "px");
+    p.style.left = cx+"px"; p.style.top = cy+"px";
+    p.style.background = color;
+    document.body.appendChild(p);
+    setTimeout(()=> p.remove(), 850);
+  }
+  setTimeout(()=> btn.classList.remove("pop"), 550);
+}
+
 /* ================= 页面渲染 ================= */
 const $ = sel => document.querySelector(sel);
 let currentPage = "home";
 let editingTaskId = null;
+let fitTagSel = "跑步";
 
 function showPage(p){
   currentPage = p;
@@ -421,9 +616,9 @@ function renderTasks(){
     <div class="card">
       <div class="task-form">
         <input type="text" id="t-title" placeholder="要做什么？" style="flex:2;min-width:160px">
-        <input type="time" id="t-start">
+        ${timeBtn("t-start", "", "开始时间")}
         <span class="muted">至</span>
-        <input type="time" id="t-end">
+        ${timeBtn("t-end", "", "结束时间")}
         <input type="text" id="t-memo" placeholder="备注（可选）" style="flex:1;min-width:100px">
         <button class="btn" data-action="add-task">${editingTaskId ? "保存修改" : "添加"}</button>
         ${editingTaskId ? '<button class="btn-ghost" data-action="cancel-edit">取消</button>' : ""}
@@ -432,7 +627,7 @@ function renderTasks(){
     <div class="card">
       <h3>任务列表 ${rate ? `<span class="tag">已完成 ${rate.done}/${rate.total}</span>` : ""}</h3>
       ${rate ? `<div class="progress-track"><div class="progress-fill" style="width:${rate.pct}%"></div></div>` : ""}
-      ${tasks.length ? tasks.map((t,i)=>`
+      ${tasks.length ? tasks.map(t=>`
         <div class="task-item ${t.done?"done":""}">
           <input type="checkbox" data-change="toggle-task" data-id="${t.id}" ${t.done?"checked":""}>
           <span class="tm">${t.start?esc(t.start):"--:--"} - ${t.end?esc(t.end):"--:--"}</span>
@@ -444,7 +639,7 @@ function renderTasks(){
 }
 
 /* ---------- 时间段 ---------- */
-const TL_H = 48; // 每小时像素高
+const TL_H = 48;
 function renderTimeline(){
   const tasks = todayTasks().filter(t=> toMin(t.start)!=null);
   const allday = todayTasks().filter(t=> toMin(t.start)==null);
@@ -506,21 +701,40 @@ function renderGoals(){
       </div>`).join("") : '<div class="card"><p class="empty">还没有目标，从上方新建一个吧</p></div>'}`;
 }
 
-/* ---------- 健身 ---------- */
+/* ---------- 健身（打卡 + 日历） ---------- */
+function monthCalCells(onDay){
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const first = new Date(y, m, 1).getDay();
+  const days = new Date(y, m+1, 0).getDate();
+  let cells = "";
+  ["日","一","二","三","四","五","六"].forEach(w=> cells += `<div class="wd">${w}</div>`);
+  for(let i=0; i<first; i++) cells += '<div class="day blank"></div>';
+  for(let d=1; d<=days; d++){
+    const dk = y+"-"+pad(m+1)+"-"+pad(d);
+    cells += onDay(dk, d, dk===todayKey());
+  }
+  return { cells, title: y + " 年 " + (m+1) + " 月" };
+}
+
 function renderFitness(){
   const k = todayKey();
   const mood = DB.moods[k], weather = DB.weather[k];
   const rec = recommend(mood && mood.level, weather);
-  const f = DB.fitness[k] || {content:"", minutes:"", checked:false};
-  const dots = [];
-  for(let i=6; i>=0; i--){
-    const d = new Date(); d.setDate(d.getDate()-i);
-    const dk = keyOf(d);
-    dots.push(`<div class="dot ${DB.fitness[dk] && DB.fitness[dk].checked ? "on":""}">${d.getDate()}</div>`);
-  }
+  const f = fitDay(k);
+  const total = fitTotal(k);
+  const pct = f.goalMin > 0 ? Math.min(100, Math.round(total/f.goalMin*100)) : 0;
+  const done = f.goalMin > 0 && total >= f.goalMin;
+
+  const cal = monthCalCells((dk, d, isToday)=>{
+    const totalMin = DB.fitness[dk] && Array.isArray(DB.fitness[dk].entries) ? fitTotal(dk) : 0;
+    return `<div class="day ${isToday?"today":""}" data-action="fit-cal-day" data-date="${dk}">${d}
+      ${totalMin>0?`<span class="sub">${totalMin}'</span>`:""}</div>`;
+  });
+
   $("#page-fitness").innerHTML = `
     <h1 class="page-title">健身计划</h1>
-    <p class="page-sub">AI 根据心情与天气推荐今日运动</p>
+    <p class="page-sub">每日运动打卡 · 目标达成会点亮日历</p>
     <div class="rec-card">
       <h3>✨ 今日推荐</h3>
       ${rec ? `<p style="font-size:15px;font-weight:600">${esc(rec.fitness.text)}</p>
@@ -528,26 +742,63 @@ function renderFitness(){
         '<p class="empty">请先在首页或心情页打卡今日心情，并选择天气</p>'}
     </div>
     <div class="card">
-      <h3>今日运动记录 ${f.checked ? '<span class="tag">已打卡 ✓</span>' : ""}</h3>
+      <h3>🎯 今日运动目标 ${done ? '<span class="tag green">已达成 ✓</span>' : ""}</h3>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <span class="small muted">目标时长：</span>
+        ${durBtn("fit-goal", f.goalMin)}
+        <span class="small muted">今日已运动 <b style="color:var(--brand)">${total}</b> 分钟</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <p class="small muted">${pct}%${done ? " · 太棒了，今天的目标已完成！" : ""}</p>
+    </div>
+    <div class="card">
+      <h3>➕ 运动打卡</h3>
+      <div class="tag-row">${FIT_TAGS.map(t=>`
+        <button class="tag-chip ${fitTagSel===t?"sel":""}" data-action="fit-tag" data-tag="${t}">${t}</button>`).join("")}
+      </div>
       <div class="task-form">
-        <input type="text" id="f-content" placeholder="做了什么运动？" value="${esc(f.content)}" style="flex:2;min-width:160px">
-        <input type="number" id="f-minutes" placeholder="时长(分钟)" value="${esc(f.minutes)}" style="width:110px">
-        <label class="small"><input type="checkbox" data-change="fit-check" ${f.checked?"checked":""}> 完成打卡</label>
-        <button class="btn" data-action="save-fit">保存</button>
+        <select id="f-part">${FIT_PARTS.map(p=>`<option>${p}</option>`).join("")}</select>
+        <input type="text" id="f-detail" placeholder="动作名称，如：俯卧撑" style="flex:1;min-width:120px">
+        <input type="text" id="f-reps" placeholder="组数×次数，如：3组×12次" style="width:150px">
+        ${durBtn("fit-dur", 30)}
+        <button class="btn" data-action="add-fit-entry">打卡</button>
       </div>
     </div>
-    <div class="card"><h3>本周打卡</h3><div class="dots">${dots.join("")}</div></div>`;
+    <div class="card">
+      <h3>今日打卡记录</h3>
+      ${f.entries.length ? f.entries.map(e=>`
+        <div class="fit-entry">
+          <span class="tag">${esc(e.tag)}</span>
+          <span class="tag">${esc(e.part)}</span>
+          <span>${esc(e.detail||"")}</span>
+          <span class="small muted">${esc(e.reps||"")}</span>
+          <span class="min">${Math.max(0,e.minutes|0)} 分钟</span>
+          <button class="btn-mini" data-action="del-fit-entry" data-id="${e.id}">删除</button>
+        </div>`).join("") : '<p class="empty">今天还没运动，打个卡吧</p>'}
+    </div>
+    <div class="card">
+      <h3>${cal.title} 运动日历</h3>
+      <div class="cal">${cal.cells}</div>
+      <div class="day-detail" id="fit-day-detail" style="display:none"></div>
+    </div>`;
 }
 
-/* ---------- 饮食 ---------- */
+/* ---------- 饮食（三餐 + 日历） ---------- */
+function dietDayHas(k){ const d = DB.diet[k]; return d && (d.breakfast || d.lunch || d.dinner); }
 function renderDiet(){
   const k = todayKey();
   const mood = DB.moods[k], weather = DB.weather[k];
   const rec = recommend(mood && mood.level, weather);
   const d = DB.diet[k] || {breakfast:"", lunch:"", dinner:""};
+
+  const cal = monthCalCells((dk, dnum, isToday)=>{
+    return `<div class="day ${isToday?"today":""}" data-action="diet-cal-day" data-date="${dk}">${dnum}
+      ${dietDayHas(dk)?'<span class="sub">🍚</span>':""}</div>`;
+  });
+
   $("#page-diet").innerHTML = `
     <h1 class="page-title">饮食计划</h1>
-    <p class="page-sub">AI 三餐建议 + 记录实际饮食</p>
+    <p class="page-sub">AI 三餐建议 + 记录实际饮食 + 饮食日历</p>
     <div class="rec-card">
       <h3>✨ 今日三餐建议</h3>
       ${rec ? `
@@ -558,25 +809,30 @@ function renderDiet(){
         '<p class="empty">请先在首页或心情页打卡今日心情，并选择天气</p>'}
     </div>
     <div class="card">
-      <h3>实际吃了什么</h3>
+      <h3>今天实际吃了什么</h3>
       <div style="display:grid;gap:10px">
         <label class="small muted">早餐<input type="text" style="width:100%;margin-top:4px" data-change="diet" data-meal="breakfast" value="${esc(d.breakfast)}" placeholder="记录早餐…"></label>
         <label class="small muted">午餐<input type="text" style="width:100%;margin-top:4px" data-change="diet" data-meal="lunch" value="${esc(d.lunch)}" placeholder="记录午餐…"></label>
         <label class="small muted">晚餐<input type="text" style="width:100%;margin-top:4px" data-change="diet" data-meal="dinner" value="${esc(d.dinner)}" placeholder="记录晚餐…"></label>
       </div>
       <p class="small muted" style="margin-top:8px">输入后自动保存</p>
+    </div>
+    <div class="card">
+      <h3>${cal.title} 饮食日历</h3>
+      <div class="cal">${cal.cells}</div>
+      <div class="day-detail" id="diet-day-detail" style="display:none"></div>
     </div>`;
 }
 
-/* ---------- 游戏娱乐 ---------- */
+/* ---------- 游戏娱乐（游戏卡片） ---------- */
 function renderFun(){
   const k = todayKey();
   const mood = DB.moods[k], weather = DB.weather[k];
   const rec = recommend(mood && mood.level, weather);
-  const list = DB.fun[k] || [];
+  const list = funDay(k);
   $("#page-fun").innerHTML = `
     <h1 class="page-title">游戏娱乐</h1>
-    <p class="page-sub">规划娱乐时间，张弛有度</p>
+    <p class="page-sub">用游戏卡片记录每一场游戏时光</p>
     <div class="rec-card">
       <h3>✨ 今日娱乐推荐</h3>
       ${rec ? `<p style="font-size:15px;font-weight:600">${esc(rec.fun.text)}</p>
@@ -585,43 +841,39 @@ function renderFun(){
     </div>
     <div class="card">
       <div class="task-form">
-        <input type="text" id="fun-content" placeholder="想怎么放松？如：看电影" style="flex:2;min-width:160px">
-        <input type="time" id="fun-start">
+        <input type="text" id="fun-name" placeholder="游戏名称，如：塞尔达传说" style="flex:2;min-width:160px">
+        ${durBtn("fun-dur", 60)}
+        ${timeBtn("fun-start", "", "开始时间")}
         <span class="muted">至</span>
-        <input type="time" id="fun-end">
-        <button class="btn" data-action="add-fun">添加娱乐计划</button>
+        ${timeBtn("fun-end", "", "结束时间")}
+        <button class="btn" data-action="add-fun">保存游戏卡片</button>
       </div>
     </div>
-    <div class="card">
-      <h3>娱乐计划</h3>
-      ${list.length ? list.map(f=>`
-        <div class="fun-item ${f.done?"done":""}">
-          <input type="checkbox" data-change="fun-toggle" data-id="${f.id}" ${f.done?"checked":""}>
-          <span class="c">${f.start?esc(f.start):"--:--"} - ${f.end?esc(f.end):"--:--"} · ${esc(f.content)}</span>
-          <input type="text" class="small" style="width:160px" placeholder="一句感受…" data-change="fun-feeling" data-id="${f.id}" value="${esc(f.feeling)}">
-          <button class="btn-mini" data-action="del-fun" data-id="${f.id}">删除</button>
-        </div>`).join("") : '<p class="empty">还没有娱乐计划</p>'}
-    </div>`;
+    ${list.length ? `<div class="game-grid">${list.map(f=>`
+      <div class="game-card ${f.done?"done":""}">
+        <div class="gn">🎮 ${esc(f.name)}</div>
+        <div class="gi">
+          ⏱ 时长：${fmtDur(f.minutes)}<br>
+          📅 安排：${f.start?esc(f.start):"--:--"} - ${f.end?esc(f.end):"--:--"}
+        </div>
+        <div class="ops">
+          <label class="small"><input type="checkbox" data-change="fun-toggle" data-id="${f.id}" ${f.done?"checked":""}> 已玩</label>
+          <button class="btn-mini" style="margin-left:auto" data-action="del-fun" data-id="${f.id}">删除</button>
+        </div>
+      </div>`).join("")}</div>` : '<div class="card"><p class="empty">还没有游戏卡片，添加一张吧</p></div>'}
+  `;
 }
 
 /* ---------- 清晨心情 ---------- */
 function renderMood(){
   const k = todayKey();
   const mood = DB.moods[k];
-  const now = new Date();
-  const y = now.getFullYear(), m = now.getMonth();
-  const first = new Date(y, m, 1).getDay();
-  const days = new Date(y, m+1, 0).getDate();
-  let cells = "";
-  ["日","一","二","三","四","五","六"].forEach(w=> cells += `<div class="wd">${w}</div>`);
-  for(let i=0; i<first; i++) cells += '<div class="day blank"></div>';
-  for(let d=1; d<=days; d++){
-    const dk = y+"-"+pad(m+1)+"-"+pad(d);
+  const cal = monthCalCells((dk, d, isToday)=>{
     const rec = DB.moods[dk];
     const mm = rec ? MOODS.find(x=>x.level===rec.level) : null;
-    cells += `<div class="day ${dk===k?"today":""}" data-action="cal-day" data-date="${dk}"
+    return `<div class="day ${isToday?"today":""}" data-action="cal-day" data-date="${dk}"
       style="${mm?`background:${mm.color};color:#fff`:""}">${d}</div>`;
-  }
+  });
   $("#page-mood").innerHTML = `
     <h1 class="page-title">今日清晨心情</h1>
     <p class="page-sub">每天早上打卡一次，记录自己的心情曲线</p>
@@ -636,8 +888,8 @@ function renderMood(){
       <p class="small muted" id="mood-view" style="margin-top:10px"></p>
     </div>
     <div class="card">
-      <h3>${y} 年 ${m+1} 月心情日历</h3>
-      <div class="cal">${cells}</div>
+      <h3>${cal.title} 心情日历</h3>
+      <div class="cal">${cal.cells}</div>
     </div>`;
 }
 
@@ -664,7 +916,7 @@ function renderSettings(){
     </div>
     <div class="card">
       <h3>数据管理</h3>
-      <p class="small muted" style="margin-bottom:12px">所有数据保存在本机浏览器中；建议绑定一个本地文件做实时备份，或定期导出备份。</p>
+      <p class="small muted" style="margin-bottom:12px">所有数据保存在本机浏览器中；建议绑定一个本地文件做实时备份，或定期导出备份。右下角也有手动保存按钮。</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         ${supportFS ? '<button class="btn" data-action="bind-file">绑定本地数据文件</button>' : ""}
         <button class="btn-ghost" data-action="export">导出备份（JSON）</button>
@@ -687,11 +939,32 @@ document.addEventListener("click", async e=>{
   switch(a){
     case "nav": showPage(el.dataset.page); break;
 
+    /* 全局手动保存 */
+    case "save-all": {
+      save();
+      const tip = $("#save-tip");
+      const now = new Date();
+      tip.textContent = "已保存 ✓ " + pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds());
+      tip.classList.add("show");
+      clearTimeout(tip._t);
+      tip._t = setTimeout(()=> tip.classList.remove("show"), 2500);
+      break;
+    }
+
+    /* 滚轮选择器 */
+    case "wheel-time": openTimeWheel(el); break;
+    case "wheel-dur": openDurWheel(el, el.dataset.key==="fit-goal" ? "每日运动目标时长" : "选择时长"); break;
+
     /* 心情 & 天气 */
     case "quick-mood": case "set-mood": {
       const level = +el.dataset.level;
+      const mm = MOODS.find(x=>x.level===level);
       DB.moods[k] = { level, note: (DB.moods[k] ? DB.moods[k].note : "") };
-      save(); renderAll(); break;
+      save(); renderAll(); // 推荐等内容立即刷新
+      // 渲染后在新按钮上播放动画（粒子挂在 body 上，不受重渲染影响）
+      const nb = document.querySelector(`#page-${currentPage} [data-action="${a}"][data-level="${level}"]`);
+      if(nb) playMoodAnim(nb, mm ? mm.color : "#6c7cf7");
+      break;
     }
     case "save-mood-note": {
       const note = $("#mood-note").value.trim();
@@ -722,7 +995,12 @@ document.addEventListener("click", async e=>{
     case "add-task": {
       const title = $("#t-title").value.trim();
       if(!title) break;
-      const t = { title, start:$("#t-start").value, end:$("#t-end").value, memo:$("#t-memo").value.trim() };
+      const t = {
+        title,
+        start: document.querySelector('[data-key="t-start"]').dataset.value || "",
+        end: document.querySelector('[data-key="t-end"]').dataset.value || "",
+        memo: $("#t-memo").value.trim()
+      };
       if(!DB.tasks[k]) DB.tasks[k] = [];
       if(editingTaskId){
         const it = DB.tasks[k].find(x=>x.id===editingTaskId);
@@ -738,7 +1016,11 @@ document.addEventListener("click", async e=>{
       if(!it) break;
       editingTaskId = id;
       renderTasks();
-      $("#t-title").value = it.title; $("#t-start").value = it.start||""; $("#t-end").value = it.end||""; $("#t-memo").value = it.memo||"";
+      $("#t-title").value = it.title;
+      const sb = document.querySelector('[data-key="t-start"]'), eb = document.querySelector('[data-key="t-end"]');
+      if(it.start){ sb.dataset.value = it.start; sb.textContent = it.start; sb.classList.remove("empty"); }
+      if(it.end){ eb.dataset.value = it.end; eb.textContent = it.end; eb.classList.remove("empty"); }
+      $("#t-memo").value = it.memo||"";
       break;
     }
     case "cancel-edit": editingTaskId = null; renderTasks(); break;
@@ -751,8 +1033,10 @@ document.addEventListener("click", async e=>{
       editingTaskId = null;
       showPage("tasks");
       const h = pad(+el.dataset.hour);
-      $("#t-start").value = h+":00";
-      $("#t-end").value = pad(Math.min(23,(+el.dataset.hour)+1))+":00";
+      const sb = document.querySelector('[data-key="t-start"]'), eb = document.querySelector('[data-key="t-end"]');
+      sb.dataset.value = h+":00"; sb.textContent = h+":00"; sb.classList.remove("empty");
+      eb.dataset.value = pad(Math.min(23,(+el.dataset.hour)+1))+":00";
+      eb.textContent = eb.dataset.value; eb.classList.remove("empty");
       $("#t-title").focus();
       break;
     }
@@ -786,26 +1070,73 @@ document.addEventListener("click", async e=>{
       break;
     }
 
-    /* 健身 */
-    case "save-fit": {
-      DB.fitness[k] = {
-        content: $("#f-content").value.trim(),
-        minutes: $("#f-minutes").value,
-        checked: DB.fitness[k] ? DB.fitness[k].checked : false
-      };
+    /* 健身打卡 */
+    case "fit-tag": fitTagSel = el.dataset.tag; renderFitness(); break;
+    case "add-fit-entry": {
+      const f = fitDay(k);
+      const minutes = Math.max(0, parseInt(document.querySelector('[data-key="fit-dur"]').dataset.value || "0", 10));
+      const detail = $("#f-detail").value.trim();
+      if(minutes === 0 && !detail) break; // 时长和动作至少要填一个
+      f.entries.push({
+        id: uid(),
+        tag: fitTagSel,
+        part: $("#f-part").value,
+        detail: detail,
+        reps: $("#f-reps").value.trim(),
+        minutes: minutes
+      });
       save(); renderAll(); break;
     }
+    case "del-fit-entry": {
+      if(ask("确定删除这条打卡记录吗？")){
+        const f = fitDay(k);
+        f.entries = f.entries.filter(x=>x.id!==id);
+        save(); renderAll();
+      }
+      break;
+    }
+    case "fit-cal-day": {
+      const dk = el.dataset.date;
+      const fd = DB.fitness[dk];
+      const box = $("#fit-day-detail");
+      if(fd && Array.isArray(fd.entries) && fd.entries.length){
+        box.style.display = "block";
+        box.innerHTML = `<b>${dk}</b> · 共 ${fitTotal(dk)} 分钟<br>` + fd.entries.map(x=>
+          `${esc(x.tag)} · ${esc(x.part)} · ${esc(x.detail||"—")} ${esc(x.reps||"")} · ${Math.max(0,x.minutes|0)} 分钟`).join("<br>");
+      } else {
+        box.style.display = "block";
+        box.textContent = dk + "：没有运动记录";
+      }
+      break;
+    }
 
-    /* 娱乐 */
+    /* 饮食日历 */
+    case "diet-cal-day": {
+      const dk = el.dataset.date;
+      const dd = DB.diet[dk];
+      const box = $("#diet-day-detail");
+      box.style.display = "block";
+      box.innerHTML = dd && (dd.breakfast||dd.lunch||dd.dinner)
+        ? `<b>${dk}</b><br>🍳 早餐：${esc(dd.breakfast||"—")}<br>🍱 午餐：${esc(dd.lunch||"—")}<br>🍲 晚餐：${esc(dd.dinner||"—")}`
+        : dk + "：没有饮食记录";
+      break;
+    }
+
+    /* 娱乐（游戏卡片） */
     case "add-fun": {
-      const c = $("#fun-content").value.trim();
+      const c = $("#fun-name").value.trim();
       if(!c) break;
-      if(!DB.fun[k]) DB.fun[k] = [];
-      DB.fun[k].push({id:uid(), content:c, start:$("#fun-start").value, end:$("#fun-end").value, done:false, feeling:""});
+      funDay(k).push({
+        id: uid(), name: c,
+        minutes: Math.max(0, parseInt(document.querySelector('[data-key="fun-dur"]').dataset.value || "0", 10)),
+        start: document.querySelector('[data-key="fun-start"]').dataset.value || "",
+        end: document.querySelector('[data-key="fun-end"]').dataset.value || "",
+        done: false
+      });
       save(); renderAll(); break;
     }
     case "del-fun":
-      if(ask("确定删除这条娱乐计划吗？")){ DB.fun[k] = (DB.fun[k]||[]).filter(f=>f.id!==id); save(); renderAll(); }
+      if(ask("确定删除这张游戏卡片吗？")){ DB.fun[k] = funDay(k).filter(f=>f.id!==id); save(); renderAll(); }
       break;
 
     /* 数据管理 */
@@ -859,24 +1190,14 @@ document.addEventListener("change", e=>{
       if(s){ s.done = el.checked; save(); renderAll(); }
       break;
     }
-    case "fit-check": {
-      if(!DB.fitness[k]) DB.fitness[k] = {content:"", minutes:"", checked:false};
-      DB.fitness[k].checked = el.checked;
-      save(); renderAll(); break;
-    }
     case "diet": {
       if(!DB.diet[k]) DB.diet[k] = {breakfast:"", lunch:"", dinner:""};
       DB.diet[k][el.dataset.meal] = el.value.trim();
       save(); break;
     }
     case "fun-toggle": {
-      const it = (DB.fun[k]||[]).find(x=>x.id===id);
+      const it = funDay(k).find(x=>x.id===id);
       if(it){ it.done = el.checked; save(); renderAll(); }
-      break;
-    }
-    case "fun-feeling": {
-      const it = (DB.fun[k]||[]).find(x=>x.id===id);
-      if(it){ it.feeling = el.value.trim(); save(); }
       break;
     }
     case "import-file": {
@@ -900,7 +1221,7 @@ setInterval(()=>{ if(currentPage==="timeline") renderTimeline(); }, 60000);
 window.__app = {
   get DB(){ return DB; },
   recommend, exportJSON, importData, calcStreak, completionRate, todayKey, keyOf,
-  showPage, blank
+  showPage, blank, fitDay, fitTotal, funDay, fmtDur
 };
 
 renderAll();
