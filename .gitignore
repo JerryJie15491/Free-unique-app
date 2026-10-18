@@ -6,3 +6,6 @@ node_modules/
 Thumbs.db
 .DS_Store
 desktop.ini
+
+# 内部工作目录（不对外公开）
+.workbuddy/
