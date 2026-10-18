@@ -1,4 +1,4 @@
-// 阶段 0+1：骨架 / 导航 / 今日计划 / 时间段（滚轮时间选择器版本）
+// 阶段 0+1：骨架 / 导航 / 今日计划（日历+弹窗） / 时间段
 const { makeApp, close, t, ok, eq } = require('./helper');
 
 // 滚轮时间按钮在测试中直接设定值（真实浏览器中由滚轮选择器写入 dataset.value）
@@ -14,14 +14,14 @@ let dom = makeApp();
 let d = dom.window.document;
 
 t('导航包含 9 个模块', () => eq(d.querySelectorAll('.nav-item').length, 9));
-t('默认显示首页', () => ok(d.querySelector('#page-home').classList.contains('active')));
-t('点击导航切换到今日计划页', () => {
-  d.querySelector('[data-page="tasks"]').click();
-  ok(d.querySelector('#page-tasks').classList.contains('active'));
-  ok(!d.querySelector('#page-home').classList.contains('active'));
+t('导航顺序：时间段在学习目标之前', () => {
+  const pages = [...d.querySelectorAll('.nav-item')].map(n => n.dataset.page);
+  ok(pages.indexOf('timeline') < pages.indexOf('goals'), '顺序: ' + pages.join(','));
+  ok(pages.indexOf('timeline') > pages.indexOf('tasks'), '时间段应在今日计划之后');
 });
+t('默认显示首页', () => ok(d.querySelector('#page-home').classList.contains('active')));
 t('9 个页面都能切换显示', () => {
-  ['home','tasks','goals','timeline','fitness','diet','fun','mood','settings'].forEach(p=>{
+  ['home','tasks','timeline','goals','fitness','diet','fun','mood','settings'].forEach(p=>{
     d.querySelector('[data-page="'+p+'"]').click();
     ok(d.querySelector('#page-'+p).classList.contains('active'), p+' 未激活');
   });
@@ -29,53 +29,67 @@ t('9 个页面都能切换显示', () => {
 t('全局手动保存按钮存在', () => ok(d.querySelector('#global-save')));
 close(dom);
 
-console.log('== 阶段1: 今日计划 ==');
+console.log('== 阶段1: 今日计划（日历 + 弹窗） ==');
 dom = makeApp(); d = dom.window.document;
 const app = () => dom.window.__app;
-
 d.querySelector('[data-page="tasks"]').click();
 
-t('时间输入为滚轮按钮（无 number/time 输入框）', () => {
-  ok(d.querySelector('[data-key="t-start"]'), '缺少开始时间滚轮按钮');
-  ok(!d.querySelector('#page-tasks input[type="time"]'), '不应再有 time 输入框');
+t('今日计划页为日历形式', () => {
+  ok(d.querySelector('#page-tasks .cal'), '缺少日历');
+  ok(d.querySelector('#page-tasks .cal .day.today'), '缺少今天格子');
 });
 
-t('添加任务后出现在列表与数据中', () => {
-  d.querySelector('#t-title').value = '学习英语';
-  setTimeBtn(d, 't-start', '09:00');
-  setTimeBtn(d, 't-end', '09:30');
-  d.querySelector('[data-action="add-task"]').click();
+t('点击今天弹出计划弹窗', () => {
+  d.querySelector('#page-tasks .cal .day.today').click();
+  ok(d.querySelector('#modal-ov'), '弹窗未出现');
+  ok(d.querySelector('#modal-ov').textContent.includes('计划安排'));
+  ok(d.querySelector('[data-action="m-add-task"]'), '弹窗缺少添加按钮');
+});
+
+t('弹窗中添加任务（标题+滚轮时间+能量）', () => {
+  d.querySelector('#m-title').value = '学习英语';
+  setTimeBtn(d, 'm-start', '09:00');
+  setTimeBtn(d, 'm-end', '09:30');
+  d.querySelector('[data-action="m-energy"][data-e="mid"]').click();
+  d.querySelector('[data-action="m-add-task"]').click();
   const tasks = app().DB.tasks[app().todayKey()];
   eq(tasks.length, 1);
   eq(tasks[0].title, '学习英语');
   eq(tasks[0].start, '09:00');
-  ok(d.querySelector('#page-tasks').textContent.includes('学习英语'));
+  eq(tasks[0].energy, 'mid');
+  ok(d.querySelector('#modal-ov').textContent.includes('学习英语'), '弹窗列表应显示新任务');
 });
 
-t('勾选完成：划线 + 进度 1/1', () => {
-  d.querySelector('[data-change="toggle-task"]').click();
+t('弹窗中勾选完成', () => {
+  d.querySelector('#modal-ov [data-change="toggle-task"]').click();
   eq(app().DB.tasks[app().todayKey()][0].done, true);
-  ok(d.querySelector('.task-item.done'), '没有 done 样式');
-  ok(d.querySelector('#page-tasks').textContent.includes('1/1'));
+  ok(d.querySelector('#modal-ov .task-item.done'), '弹窗中应显示完成划线');
 });
 
 t('localStorage 已持久化', () => {
   ok(dom.window.localStorage.getItem('myLifeData').includes('学习英语'));
 });
 
-t('编辑任务（时间按钮回显）', () => {
-  d.querySelector('[data-action="edit-task"]').click();
-  eq(d.querySelector('#t-title').value, '学习英语');
-  eq(d.querySelector('[data-key="t-start"]').dataset.value, '09:00');
-  d.querySelector('#t-title').value = '学习英语语法';
-  d.querySelector('[data-action="add-task"]').click();
+t('编辑任务弹出编辑窗口（预填内容）', () => {
+  d.querySelector('#modal-ov [data-action="m-edit-task"]').click();
+  ok(d.querySelector('#modal-ov').textContent.includes('编辑任务'));
+  eq(d.querySelector('#me-title').value, '学习英语');
+  eq(d.querySelector('[data-key="me-start"]').dataset.value, '09:00');
+  d.querySelector('#me-title').value = '学习英语语法';
+  d.querySelector('[data-action="m-save-edit"]').click();
   eq(app().DB.tasks[app().todayKey()][0].title, '学习英语语法');
   eq(app().DB.tasks[app().todayKey()].length, 1, '编辑不应新增');
+  ok(d.querySelector('#modal-ov').textContent.includes('学习英语语法'), '应返回当天弹窗');
 });
 
 t('删除任务（二次确认通过）', () => {
-  d.querySelector('[data-action="del-task"]').click();
+  d.querySelector('#modal-ov [data-action="del-task"]').click();
   eq(app().DB.tasks[app().todayKey()].length, 0);
+});
+
+t('关闭弹窗', () => {
+  d.querySelector('[data-action="close-modal"]').click();
+  ok(!d.querySelector('#modal-ov'));
 });
 const seed = dom.window.localStorage.getItem('myLifeData');
 close(dom);
@@ -88,10 +102,12 @@ close(dom);
 console.log('== 阶段1: 时间段时间轴 ==');
 dom = makeApp(); d = dom.window.document;
 d.querySelector('[data-page="tasks"]').click();
-d.querySelector('#t-title').value = '晨跑';
-setTimeBtn(d, 't-start', '08:00');
-setTimeBtn(d, 't-end', '08:45');
-d.querySelector('[data-action="add-task"]').click();
+d.querySelector('#page-tasks .cal .day.today').click();
+d.querySelector('#m-title').value = '晨跑';
+setTimeBtn(d, 'm-start', '08:00');
+setTimeBtn(d, 'm-end', '08:45');
+d.querySelector('[data-action="m-add-task"]').click();
+d.querySelector('[data-action="close-modal"]').click();
 d.querySelector('[data-page="timeline"]').click();
 
 t('时间轴有 24 个小时格', () => eq(d.querySelectorAll('.tl-hour').length, 24));
@@ -112,17 +128,20 @@ t('点击色块标记完成', () => {
   eq(app().DB.tasks[app().todayKey()][0].done, true);
   ok(d.querySelector('.tl-block.done'));
 });
-t('点击空白时段跳转新建并预填时间（滚轮按钮）', () => {
+t('点击空白时段打开弹窗并预填时间', () => {
   d.querySelectorAll('.tl-hour')[14].click();
   ok(d.querySelector('#page-tasks').classList.contains('active'));
-  eq(d.querySelector('[data-key="t-start"]').dataset.value, '14:00');
-  eq(d.querySelector('[data-key="t-end"]').dataset.value, '15:00');
+  ok(d.querySelector('#modal-ov'), '应弹出计划弹窗');
+  eq(d.querySelector('[data-key="m-start"]').dataset.value, '14:00');
+  eq(d.querySelector('[data-key="m-end"]').dataset.value, '15:00');
+  d.querySelector('[data-action="close-modal"]').click();
 });
 t('无时间任务归入全天区', () => {
-  d.querySelector('#t-title').value = '全天备忘任务';
-  setTimeBtn(d, 't-start', '');
-  setTimeBtn(d, 't-end', '');
-  d.querySelector('[data-action="add-task"]').click();
+  d.querySelector('[data-page="tasks"]').click();
+  d.querySelector('#page-tasks .cal .day.today').click();
+  d.querySelector('#m-title').value = '全天备忘任务';
+  d.querySelector('[data-action="m-add-task"]').click();
+  d.querySelector('[data-action="close-modal"]').click();
   d.querySelector('[data-page="timeline"]').click();
   ok(d.querySelector('.tl-allday') && d.querySelector('.tl-allday').textContent.includes('全天备忘任务'));
 });

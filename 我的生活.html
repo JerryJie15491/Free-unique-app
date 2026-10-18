@@ -74,20 +74,25 @@
   @keyframes pop { 0%{transform:scale(1)} 40%{transform:scale(1.35) rotate(-8deg)} 70%{transform:scale(.92)} 100%{transform:scale(1)} }
   .pick-btn.pop { animation:pop .5s ease; }
   @keyframes burst { to { transform:translate(var(--dx),var(--dy)) scale(.4); opacity:0; } }
-  .particle { position:fixed; width:8px; height:8px; border-radius:50%; pointer-events:none; z-index:60; animation:burst .8s ease-out forwards; }
+  .particle { position:fixed; width:8px; height:8px; border-radius:50%; pointer-events:none; z-index:70; animation:burst .8s ease-out forwards; }
 
   /* Apple 闹钟式滚轮选择器 */
-  .wheel-overlay { position:fixed; inset:0; background:rgba(0,0,0,.35); display:flex; align-items:flex-end; justify-content:center; z-index:50; }
+  .wheel-overlay { position:fixed; inset:0; background:rgba(0,0,0,.35); display:flex; align-items:flex-end; justify-content:center; z-index:60; }
   .wheel-sheet { background:#fff; border-radius:16px 16px 0 0; padding:14px 18px 22px; width:320px; }
   .wheel-title { text-align:center; font-weight:600; margin-bottom:8px; }
   .wheel-cols { display:flex; justify-content:center; gap:6px; position:relative; }
-  .wheel-cols::before { content:""; position:absolute; left:0; right:0; top:72px; height:36px; background:var(--brand-soft); border-radius:8px; pointer-events:none; }
-  .wheel-col { height:180px; overflow-y:auto; scroll-snap-type:y mandatory; padding:72px 0; scrollbar-width:none; }
+  .wheel-cols::before { content:""; position:absolute; left:0; right:0; top:72px; height:36px; background:rgba(238,240,254,.45); border-top:1.5px solid var(--brand); border-bottom:1.5px solid var(--brand); pointer-events:none; z-index:0; }
+  .wheel-col { height:180px; overflow-y:auto; scroll-snap-type:y mandatory; padding:72px 0; scrollbar-width:none; position:relative; z-index:1; }
   .wheel-col::-webkit-scrollbar { display:none; }
   .wheel-item { height:36px; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; font-size:15px; color:var(--muted); cursor:pointer; min-width:64px; }
   .wheel-item.cur { color:var(--ink); font-weight:600; font-size:17px; }
   .wheel-actions { display:flex; gap:10px; margin-top:12px; }
   .wheel-actions button { flex:1; }
+
+  /* 通用弹窗 */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; z-index:50; }
+  .modal-sheet { background:#fff; border-radius:16px; padding:20px 22px; width:560px; max-width:94vw; max-height:86vh; overflow-y:auto; }
+  .modal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; font-weight:600; font-size:16px; }
 
   /* 时间/时长按钮（点击弹出滚轮） */
   .time-btn { background:#fff; border:1px solid var(--line); border-radius:8px; padding:8px 14px; font-size:14px; color:var(--ink); min-width:78px; text-align:center; font-variant-numeric:tabular-nums; }
@@ -105,6 +110,10 @@
   .progress-track { height:8px; background:var(--bg); border-radius:5px; overflow:hidden; margin:8px 0 4px; }
   .progress-fill { height:100%; background:var(--brand); border-radius:5px; transition:width .3s; }
 
+  /* 能量标签 */
+  .e-dot { display:inline-block; width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .energy-warn { background:#fdf0ef; border:1px solid #f3c2c2; color:var(--red); border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:12px; }
+
   /* 时间轴 */
   .tl-wrap { position:relative; border:1px solid var(--line); border-radius:12px; background:#fff; overflow:hidden; }
   .tl-allday { padding:8px 14px; border-bottom:1px dashed var(--line); font-size:12px; color:var(--muted); background:#fbfbff; }
@@ -121,8 +130,10 @@
   .goal-card .top { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
   .goal-card .name { font-weight:600; flex:1; }
   .goal-card input[type=range] { width:100%; accent-color:var(--brand); }
-  .subgoal { display:flex; align-items:center; gap:8px; padding:4px 0; font-size:13px; }
+  .subgoal { display:flex; align-items:center; gap:8px; padding:6px 0; font-size:13px; flex-wrap:wrap; }
   .subgoal.done .sg-t { text-decoration:line-through; color:var(--muted); }
+  .subgoal input[type=range] { width:110px; accent-color:var(--brand); }
+  .subgoal .sg-pct { font-size:11px; color:var(--muted); width:34px; }
 
   /* 运动标签 */
   .tag-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
@@ -160,15 +171,17 @@
   .memo-item:last-child { border-bottom:none; }
   .memo-item .t { flex:1; }
 
-  /* 游戏卡片 */
-  .game-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; }
-  .game-card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 16px; position:relative; transition:.15s; }
+  /* 游戏卡片（大卡） */
+  .game-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; }
+  .game-card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:20px; position:relative; min-height:190px; transition:.15s; }
   .game-card:hover { border-color:var(--brand); }
-  .game-card.done { opacity:.55; }
-  .game-card.done .gn { text-decoration:line-through; }
-  .game-card .gn { font-weight:600; font-size:15px; margin-bottom:8px; }
+  .game-card .gn { font-weight:600; font-size:17px; margin-bottom:8px; }
   .game-card .gi { font-size:12px; color:var(--muted); line-height:1.8; }
   .game-card .ops { display:flex; align-items:center; gap:6px; margin-top:10px; }
+  .fun-item { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--line); }
+  .fun-item:last-of-type { border-bottom:none; }
+  .fun-item .c { flex:1; }
+  .fun-item.done .c { text-decoration:line-through; color:var(--muted); }
 
   .rec-card { background:linear-gradient(135deg,#f3f5ff,#fdf6ec); border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin-bottom:14px; }
   .rec-card .reason { font-size:12px; color:var(--muted); margin-top:6px; }
@@ -180,8 +193,8 @@
     <div class="logo">我的<span>生活</span></div>
     <div class="nav-item active" data-action="nav" data-page="home">🏠 首页总览</div>
     <div class="nav-item" data-action="nav" data-page="tasks">📋 今日计划</div>
-    <div class="nav-item" data-action="nav" data-page="goals">🎯 学习目标</div>
     <div class="nav-item" data-action="nav" data-page="timeline">🕐 时间段</div>
+    <div class="nav-item" data-action="nav" data-page="goals">🎯 学习目标</div>
     <div class="nav-item" data-action="nav" data-page="fitness">💪 健身计划</div>
     <div class="nav-item" data-action="nav" data-page="diet">🍚 饮食计划</div>
     <div class="nav-item" data-action="nav" data-page="fun">🎮 游戏娱乐</div>
@@ -192,8 +205,8 @@
   <main>
     <section class="page active" id="page-home"></section>
     <section class="page" id="page-tasks"></section>
-    <section class="page" id="page-goals"></section>
     <section class="page" id="page-timeline"></section>
+    <section class="page" id="page-goals"></section>
     <section class="page" id="page-fitness"></section>
     <section class="page" id="page-diet"></section>
     <section class="page" id="page-fun"></section>
@@ -273,6 +286,42 @@ const WEATHERS = { sunny:"☀️ 晴", cloudy:"⛅ 阴", rainy:"🌧️ 雨", sn
 const TASK_COLORS = ["#6c7cf7","#34c88a","#f7a94c","#e067b0","#4cb8f7","#9b7ff7"];
 const FIT_TAGS = ["跑步","力量","瑜伽","拉伸","游泳","骑行","散步","球类"];
 const FIT_PARTS = ["全身","胸","背","腿","肩","手臂","核心","有氧"];
+const ENERGY = { high:{label:"高", color:"#f26d6d"}, mid:{label:"中", color:"#f7a94c"}, low:{label:"低", color:"#34c88a"} };
+const ENERGY_WARN_AT = 3; // 未完成的高能量任务达到此数量时提醒
+
+/* 常见食物热量估算表（千卡/常见一份，仅供参考） */
+const FOOD_KCAL = {
+  "鸡胸肉沙拉":300, "番茄豆腐汤":120, "全麦吐司":160, "热汤面":260, "小米粥":90, "燕麦粥":150,
+  "鸡胸肉":260, "清蒸鱼":200, "杂粮饭":230, "软米饭":230, "米饭":230, "家常面":220, "面条":220,
+  "包子":440, "馒头":220, "白粥":90, "燕麦":150, "鸡蛋":140, "荷包蛋":190,
+  "牛奶":130, "豆浆":60, "香蕉":90, "苹果":80, "牛肉":250, "瘦肉":260, "鱼":180,
+  "豆腐":120, "青菜":60, "时蔬":60, "沙拉":150, "炒饭":400, "吐司":160, "炖汤":150,
+  "红薯":100, "玉米":110, "酸奶":120, "水果":80, "坚果":180, "饼干":200, "蛋糕":350,
+  "奶茶":400, "咖啡":30, "可乐":150, "薯片":300, "火锅":600, "汉堡":450, "披萨":500,
+  "饺子":400, "馄饨":300, "粥品":150, "咸菜":10, "小菜":30
+};
+function estimateKcal(text){
+  if(!text) return null;
+  let total = 0, hit = false, rest = String(text);
+  const keys = Object.keys(FOOD_KCAL).sort((a,b)=> b.length - a.length); // 长词优先，避免重复计数
+  for(const food of keys){
+    if(rest.includes(food)){ total += FOOD_KCAL[food]; hit = true; rest = rest.split(food).join(""); }
+  }
+  return hit ? total : null;
+}
+function dietKcalText(d){
+  if(!d) return "";
+  let sum = 0, any = false, unknown = false;
+  [d.breakfast, d.lunch, d.dinner].forEach(p=>{
+    if(p && p.trim()){
+      const e = estimateKcal(p);
+      if(e == null) unknown = true; else { sum += e; any = true; }
+    }
+  });
+  if(!any && !unknown) return "";
+  if(any) return `今日摄入估算：约 ${sum} 千卡${unknown ? "（部分食物无法估算）" : ""} · 仅供参考`;
+  return "这些食物无法估算卡路里 · 仅供参考";
+}
 
 /* ================= AI 推荐引擎（本地规则） ================= */
 function recommend(mood, weather){
@@ -302,12 +351,13 @@ function recommend(mood, weather){
     1:"今天辛苦了，轻柔放松、好好休息最重要"
   };
 
+  /* 三餐建议（含估算热量，仅供参考） */
   const dietTable = {
-    5:{b:"全麦吐司 + 鸡蛋 + 牛奶", l:"鸡胸肉沙拉 + 杂粮饭", d:"清蒸鱼 + 时蔬"},
-    4:{b:"燕麦粥 + 香蕉", l:"瘦肉炒饭 + 青菜", d:"番茄豆腐汤 + 米饭"},
-    3:{b:"小米粥 + 包子", l:"家常面 + 荷包蛋", d:"清炒时蔬 + 米饭"},
-    2:{b:"热汤面 + 荷包蛋", l:"暖胃粥 + 小菜", d:"炖汤 + 软米饭"},
-    1:{b:"白粥 + 清淡小菜", l:"热汤 + 馒头", d:"易消化的粥品"}
+    5:{b:"全麦吐司 + 鸡蛋 + 牛奶", bk:430, l:"鸡胸肉沙拉 + 杂粮饭", lk:530, d:"清蒸鱼 + 时蔬", dk:260},
+    4:{b:"燕麦粥 + 香蕉", bk:240, l:"瘦肉炒饭 + 青菜", lk:460, d:"番茄豆腐汤 + 米饭", dk:350},
+    3:{b:"小米粥 + 包子", bk:530, l:"家常面 + 荷包蛋", lk:410, d:"清炒时蔬 + 米饭", dk:290},
+    2:{b:"热汤面 + 荷包蛋", bk:450, l:"暖胃粥 + 小菜", lk:180, d:"炖汤 + 软米饭", dk:380},
+    1:{b:"白粥 + 清淡小菜", bk:120, l:"热汤 + 馒头", lk:320, d:"易消化粥品", dk:150}
   };
   const dietReason = {
     5:"心情好也要均衡饮食，保持好状态",
@@ -380,15 +430,22 @@ function funDay(k){
   if(!DB.fun[k]) DB.fun[k] = [];
   DB.fun[k].forEach(f=>{
     if(f.name === undefined) f.name = f.content || "";
-    if(f.minutes === undefined) f.minutes = 0;
+    if(!Array.isArray(f.items)){
+      f.items = [];
+      if(f.minutes !== undefined || f.start){
+        f.items.push({ id:uid(), minutes:Math.max(0,f.minutes||0), start:f.start||"", end:f.end||"", done:!!f.done });
+      }
+      delete f.minutes; delete f.start; delete f.end; delete f.done; delete f.content; delete f.feeling;
+    }
   });
   return DB.fun[k];
 }
+function funCardTotal(card){ return card.items.reduce((s,x)=> s + Math.max(0, x.minutes|0), 0); }
+function taskEnergy(t){ return ENERGY[t.energy] ? t.energy : "mid"; }
 
 /* ================= 滚轮选择器（Apple 闹钟式） ================= */
 const WHEEL_ITEM_H = 36;
 function openWheel(opts){
-  // opts: {title, columns:[{values:[...], index}], onDone(values)}
   closeWheel();
   const ov = document.createElement("div");
   ov.className = "wheel-overlay"; ov.id = "wheel-ov";
@@ -441,9 +498,14 @@ function openWheel(opts){
 }
 function closeWheel(){ const o = document.getElementById("wheel-ov"); if(o) o.remove(); }
 
-/* 时间滚轮：时 0-23 + 分 0-59 */
+/* 时间滚轮：时 0-23 + 分 0-59；空值时若有关联的开始时间，则从它起滑 */
 function openTimeWheel(btn){
-  const cur = btn.dataset.value || "08:00";
+  let initVal = btn.dataset.value;
+  if(!initVal && btn.dataset.linkFrom){
+    const src = document.querySelector(`[data-key="${btn.dataset.linkFrom}"]`);
+    if(src && src.dataset.value) initVal = src.dataset.value;
+  }
+  const cur = initVal || "08:00";
   const [ch, cm] = cur.split(":");
   const hours = [], mins = [];
   for(let i=0;i<24;i++) hours.push(pad(i));
@@ -479,18 +541,36 @@ function openDurWheel(btn, title){
     }
   });
 }
-function timeBtn(key, val, placeholder){
+function timeBtn(key, val, placeholder, linkFrom){
   const empty = !val;
-  return `<button class="time-btn ${empty?"empty":""}" data-action="wheel-time" data-key="${key}" data-value="${esc(val||"")}">${empty?placeholder:esc(val)}</button>`;
+  return `<button class="time-btn ${empty?"empty":""}" data-action="wheel-time" data-key="${key}" data-value="${esc(val||"")}"${linkFrom?` data-link-from="${linkFrom}"`:""}>${empty?placeholder:esc(val)}</button>`;
 }
 function durBtn(key, val){
   return `<button class="time-btn" data-action="wheel-dur" data-key="${key}" data-value="${Math.max(0,val|0)}">${fmtDur(val)}</button>`;
 }
+function setWheelBtn(key, val, isDur){
+  const btn = document.querySelector(`[data-key="${key}"]`);
+  if(!btn) return;
+  btn.dataset.value = val;
+  if(val){ btn.textContent = isDur ? fmtDur(+val) : val; btn.classList.remove("empty"); }
+}
+
+/* ================= 通用弹窗 ================= */
+let modalCtx = null; // {type:"day", date}
+function openModal(html){
+  const old = document.getElementById("modal-ov"); if(old) old.remove(); // 保留 modalCtx
+  const ov = document.createElement("div");
+  ov.className = "modal-overlay"; ov.id = "modal-ov";
+  ov.innerHTML = html;
+  document.body.appendChild(ov);
+  ov.addEventListener("click", e=>{ if(e.target === ov) closeModal(); });
+}
+function closeModal(){ const o = document.getElementById("modal-ov"); if(o) o.remove(); modalCtx = null; }
 
 /* ================= 心情动画 ================= */
 function playMoodAnim(btn, color){
   btn.classList.remove("pop");
-  void btn.offsetWidth; // 重启动画
+  void btn.offsetWidth;
   btn.classList.add("pop");
   const r = btn.getBoundingClientRect();
   const cx = r.left + r.width/2, cy = r.top + r.height/2;
@@ -512,8 +592,9 @@ function playMoodAnim(btn, color){
 /* ================= 页面渲染 ================= */
 const $ = sel => document.querySelector(sel);
 let currentPage = "home";
-let editingTaskId = null;
 let fitTagSel = "跑步";
+let mEnergy = "mid"; // 弹窗中选中的能量等级
+let editingTask = null; // {date, id}
 
 function showPage(p){
   currentPage = p;
@@ -522,10 +603,12 @@ function showPage(p){
   renderPage(p);
 }
 function renderPage(p){
-  ({home:renderHome, tasks:renderTasks, goals:renderGoals, timeline:renderTimeline,
+  ({home:renderHome, tasks:renderTasks, timeline:renderTimeline, goals:renderGoals,
     fitness:renderFitness, diet:renderDiet, fun:renderFun, mood:renderMood, settings:renderSettings}[p])();
 }
 function renderAll(){ renderPage(currentPage); }
+
+function energyDot(e){ const x = ENERGY[ENERGY[e] ? e : "mid"]; return `<span class="e-dot" title="消耗能量：${x.label}" style="background:${x.color}"></span>`; }
 
 /* ---------- 首页 ---------- */
 function renderHome(){
@@ -573,7 +656,7 @@ function renderHome(){
         ${rate ? `<div class="progress-track"><div class="progress-fill" style="width:${rate.pct}%"></div></div>` : ""}
         ${tasks.length ? tasks.slice(0,3).map(t=>`
           <div class="task-item ${t.done?"done":""}">
-            <span class="tm">${t.start?esc(t.start):"全天"}</span><span class="tt">${esc(t.title)}</span>
+            ${energyDot(t.energy)}<span class="tm">${t.start?esc(t.start):"全天"}</span><span class="tt">${esc(t.title)}</span>
           </div>`).join("") : '<p class="empty">今天还没有计划，去添加一条吧</p>'}
         ${tasks.length>3 ? `<p class="small muted">还有 ${tasks.length-3} 条…</p>` : ""}
         <button class="btn-ghost" style="margin-top:8px" data-action="nav" data-page="tasks">管理今日计划 →</button>
@@ -605,37 +688,85 @@ function renderHome(){
     </div>`;
 }
 
-/* ---------- 今日计划 ---------- */
+/* ---------- 今日计划（日历 + 弹窗） ---------- */
 function renderTasks(){
-  const k = todayKey();
-  const tasks = todayTasks().slice().sort((a,b)=> (toMin(a.start)||9999) - (toMin(b.start)||9999));
-  const rate = completionRate();
+  const cal = monthCalCells((dk, dnum, isToday)=>{
+    const list = DB.tasks[dk] || [];
+    const doneN = list.filter(x=>x.done).length;
+    return `<div class="day ${isToday?"today":""}" data-action="task-cal-day" data-date="${dk}">${dnum}
+      ${list.length?`<span class="sub">${doneN}/${list.length}</span>`:""}</div>`;
+  });
   $("#page-tasks").innerHTML = `
     <h1 class="page-title">今日计划</h1>
-    <p class="page-sub">${k} · 完成勾选，即时保存</p>
+    <p class="page-sub">点击日期查看和安排那一天的计划 · 每个任务可标注消耗能量</p>
     <div class="card">
-      <div class="task-form">
-        <input type="text" id="t-title" placeholder="要做什么？" style="flex:2;min-width:160px">
-        ${timeBtn("t-start", "", "开始时间")}
-        <span class="muted">至</span>
-        ${timeBtn("t-end", "", "结束时间")}
-        <input type="text" id="t-memo" placeholder="备注（可选）" style="flex:1;min-width:100px">
-        <button class="btn" data-action="add-task">${editingTaskId ? "保存修改" : "添加"}</button>
-        ${editingTaskId ? '<button class="btn-ghost" data-action="cancel-edit">取消</button>' : ""}
-      </div>
+      <h3>${cal.title}</h3>
+      <div class="cal">${cal.cells}</div>
     </div>
     <div class="card">
-      <h3>任务列表 ${rate ? `<span class="tag">已完成 ${rate.done}/${rate.total}</span>` : ""}</h3>
-      ${rate ? `<div class="progress-track"><div class="progress-fill" style="width:${rate.pct}%"></div></div>` : ""}
-      ${tasks.length ? tasks.map(t=>`
+      <p class="small muted">能量标记：<span class="e-dot" style="background:${ENERGY.high.color}"></span> 高消耗
+      <span class="e-dot" style="background:${ENERGY.mid.color};margin-left:10px"></span> 中消耗
+      <span class="e-dot" style="background:${ENERGY.low.color};margin-left:10px"></span> 低消耗
+      · 未完成的高能量任务达到 ${ENERGY_WARN_AT} 项时会自动提醒删减</p>
+    </div>`;
+}
+
+function openDayModal(dk){
+  modalCtx = { type:"day", date:dk };
+  const list = (DB.tasks[dk]||[]).slice().sort((a,b)=> (toMin(a.start)||9999) - (toMin(b.start)||9999));
+  const highN = list.filter(t=> taskEnergy(t)==="high" && !t.done).length;
+  const warn = highN >= ENERGY_WARN_AT
+    ? `<div class="energy-warn">⚠️ 今天高能量任务太多（${highN} 项），建议删减 1 项，提前防止计划崩盘</div>` : "";
+  openModal(`
+   <div class="modal-sheet">
+    <div class="modal-head"><span>📋 ${dk} 计划安排</span><button class="btn-mini" data-action="close-modal">✕</button></div>
+    ${warn}
+    <div style="margin-bottom:12px">
+      ${list.length ? list.map(t=>`
         <div class="task-item ${t.done?"done":""}">
-          <input type="checkbox" data-change="toggle-task" data-id="${t.id}" ${t.done?"checked":""}>
+          <input type="checkbox" data-change="toggle-task" data-date="${dk}" data-id="${t.id}" ${t.done?"checked":""}>
+          ${energyDot(t.energy)}
           <span class="tm">${t.start?esc(t.start):"--:--"} - ${t.end?esc(t.end):"--:--"}</span>
           <span class="tt">${esc(t.title)}${t.memo?` <span class="small muted">（${esc(t.memo)}）</span>`:""}</span>
-          <button class="btn-mini" data-action="edit-task" data-id="${t.id}">编辑</button>
-          <button class="btn-mini" data-action="del-task" data-id="${t.id}">删除</button>
-        </div>`).join("") : '<p class="empty">今天还没有计划，从上方添加第一条吧</p>'}
-    </div>`;
+          <button class="btn-mini" data-action="m-edit-task" data-date="${dk}" data-id="${t.id}">编辑</button>
+          <button class="btn-mini" data-action="del-task" data-date="${dk}" data-id="${t.id}">删除</button>
+        </div>`).join("") : '<p class="empty">这一天还没有计划</p>'}
+    </div>
+    <div class="task-form" style="margin-bottom:10px">
+      <input type="text" id="m-title" placeholder="要做什么？" style="flex:2;min-width:140px">
+      ${timeBtn("m-start","","开始")}
+      ${timeBtn("m-end","","结束","m-start")}
+      <input type="text" id="m-memo" placeholder="备注（可选）" style="flex:1;min-width:90px">
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span class="small muted">消耗能量：</span>
+      ${Object.keys(ENERGY).map(e=>`<button class="tag-chip ${mEnergy===e?"sel":""}" data-action="m-energy" data-e="${e}">${ENERGY[e].label}</button>`).join("")}
+      <button class="btn" data-action="m-add-task" data-date="${dk}">添加</button>
+      <button class="btn-ghost" data-action="copy-yesterday" data-date="${dk}">📋 复制昨天的计划</button>
+    </div>
+   </div>`);
+}
+function openTaskEditModal(dk, id){
+  const t = (DB.tasks[dk]||[]).find(x=>x.id===id);
+  if(!t) return;
+  editingTask = { date:dk, id };
+  mEnergy = taskEnergy(t);
+  openModal(`
+   <div class="modal-sheet">
+    <div class="modal-head"><span>✏️ 编辑任务</span><button class="btn-mini" data-action="close-modal">✕</button></div>
+    <div class="task-form" style="margin-bottom:10px">
+      <input type="text" id="me-title" value="${esc(t.title)}" style="flex:2;min-width:140px">
+      ${timeBtn("me-start", t.start||"", "开始")}
+      ${timeBtn("me-end", t.end||"", "结束", "me-start")}
+      <input type="text" id="me-memo" value="${esc(t.memo||"")}" placeholder="备注（可选）" style="flex:1;min-width:90px">
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span class="small muted">消耗能量：</span>
+      ${Object.keys(ENERGY).map(e=>`<button class="tag-chip ${mEnergy===e?"sel":""}" data-action="m-energy" data-e="${e}">${ENERGY[e].label}</button>`).join("")}
+      <button class="btn" data-action="m-save-edit">保存修改</button>
+      <button class="btn-ghost" data-action="back-day-modal" data-date="${dk}">返回</button>
+    </div>
+   </div>`);
 }
 
 /* ---------- 时间段 ---------- */
@@ -669,7 +800,7 @@ function renderTimeline(){
 function renderGoals(){
   $("#page-goals").innerHTML = `
     <h1 class="page-title">学习目标 / 工作目标</h1>
-    <p class="page-sub">设定长期目标，追踪进度</p>
+    <p class="page-sub">设定长期目标，追踪进度 · 子目标也有独立进度条</p>
     <div class="card">
       <div class="task-form">
         <input type="text" id="g-name" placeholder="目标名称，如：学完英语语法" style="flex:2;min-width:160px">
@@ -687,13 +818,18 @@ function renderGoals(){
           <button class="btn-mini" data-action="del-goal" data-id="${g.id}">删除</button>
         </div>
         <input type="range" min="0" max="100" value="${g.progress}" data-change="goal-progress" data-id="${g.id}">
-        <p class="small muted" style="margin:4px 0 8px">进度 ${g.progress}%</p>
-        ${g.subgoals.map(s=>`
+        <p class="small muted" style="margin:4px 0 8px">总进度 ${g.progress}%</p>
+        ${g.subgoals.map(s=>{
+          const sp = s.progress != null ? s.progress : (s.done ? 100 : 0);
+          return `
           <div class="subgoal ${s.done?"done":""}">
             <input type="checkbox" data-change="sub-toggle" data-gid="${g.id}" data-id="${s.id}" ${s.done?"checked":""}>
             <span class="sg-t">${esc(s.text)}</span>
+            <input type="range" min="0" max="100" value="${sp}" data-change="sub-progress" data-gid="${g.id}" data-id="${s.id}">
+            <span class="sg-pct">${sp}%</span>
             <button class="btn-mini" data-action="del-sub" data-gid="${g.id}" data-id="${s.id}">×</button>
-          </div>`).join("")}
+          </div>`;
+        }).join("")}
         <div style="display:flex;gap:8px;margin-top:6px">
           <input type="text" id="sg-${g.id}" placeholder="添加子目标…" style="flex:1">
           <button class="btn-ghost" data-action="add-sub" data-id="${g.id}">添加</button>
@@ -783,7 +919,7 @@ function renderFitness(){
     </div>`;
 }
 
-/* ---------- 饮食（三餐 + 日历） ---------- */
+/* ---------- 饮食（三餐 + 卡路里估算 + 日历） ---------- */
 function dietDayHas(k){ const d = DB.diet[k]; return d && (d.breakfast || d.lunch || d.dinner); }
 function renderDiet(){
   const k = todayKey();
@@ -798,13 +934,13 @@ function renderDiet(){
 
   $("#page-diet").innerHTML = `
     <h1 class="page-title">饮食计划</h1>
-    <p class="page-sub">AI 三餐建议 + 记录实际饮食 + 饮食日历</p>
+    <p class="page-sub">AI 三餐建议 + 记录实际饮食 + 热量估算（仅供参考）</p>
     <div class="rec-card">
       <h3>✨ 今日三餐建议</h3>
       ${rec ? `
-        <p>🍳 早餐：${esc(rec.diet.meals.b)}</p>
-        <p style="margin-top:4px">🍱 午餐：${esc(rec.diet.meals.l)}</p>
-        <p style="margin-top:4px">🍲 晚餐：${esc(rec.diet.meals.d)}</p>
+        <p>🍳 早餐：${esc(rec.diet.meals.b)}（约 ${rec.diet.meals.bk} 千卡，仅供参考）</p>
+        <p style="margin-top:4px">🍱 午餐：${esc(rec.diet.meals.l)}（约 ${rec.diet.meals.lk} 千卡，仅供参考）</p>
+        <p style="margin-top:4px">🍲 晚餐：${esc(rec.diet.meals.d)}（约 ${rec.diet.meals.dk} 千卡，仅供参考）</p>
         <p class="reason">推荐理由：${esc(rec.diet.reason)}</p>` :
         '<p class="empty">请先在首页或心情页打卡今日心情，并选择天气</p>'}
     </div>
@@ -815,7 +951,8 @@ function renderDiet(){
         <label class="small muted">午餐<input type="text" style="width:100%;margin-top:4px" data-change="diet" data-meal="lunch" value="${esc(d.lunch)}" placeholder="记录午餐…"></label>
         <label class="small muted">晚餐<input type="text" style="width:100%;margin-top:4px" data-change="diet" data-meal="dinner" value="${esc(d.dinner)}" placeholder="记录晚餐…"></label>
       </div>
-      <p class="small muted" style="margin-top:8px">输入后自动保存</p>
+      <p class="small" id="diet-kcal" style="margin-top:10px;color:var(--brand)">${dietKcalText(d)}</p>
+      <p class="small muted" style="margin-top:4px">输入后自动保存 · 热量为粗略估算，仅供参考</p>
     </div>
     <div class="card">
       <h3>${cal.title} 饮食日历</h3>
@@ -824,7 +961,7 @@ function renderDiet(){
     </div>`;
 }
 
-/* ---------- 游戏娱乐（游戏卡片） ---------- */
+/* ---------- 游戏娱乐（弹窗创建卡片 / 弹窗添加记录，大卡） ---------- */
 function renderFun(){
   const k = todayKey();
   const mood = DB.moods[k], weather = DB.weather[k];
@@ -832,7 +969,7 @@ function renderFun(){
   const list = funDay(k);
   $("#page-fun").innerHTML = `
     <h1 class="page-title">游戏娱乐</h1>
-    <p class="page-sub">用游戏卡片记录每一场游戏时光</p>
+    <p class="page-sub">为每个游戏建一张卡片，在卡片里记录每一次游戏时光</p>
     <div class="rec-card">
       <h3>✨ 今日娱乐推荐</h3>
       ${rec ? `<p style="font-size:15px;font-weight:600">${esc(rec.fun.text)}</p>
@@ -840,28 +977,46 @@ function renderFun(){
         '<p class="empty">请先在首页或心情页打卡今日心情，并选择天气</p>'}
     </div>
     <div class="card">
-      <div class="task-form">
-        <input type="text" id="fun-name" placeholder="游戏名称，如：塞尔达传说" style="flex:2;min-width:160px">
-        ${durBtn("fun-dur", 60)}
-        ${timeBtn("fun-start", "", "开始时间")}
-        <span class="muted">至</span>
-        ${timeBtn("fun-end", "", "结束时间")}
-        <button class="btn" data-action="add-fun">保存游戏卡片</button>
-      </div>
+      <button class="btn" data-action="open-fun-card">🎮 添加游戏卡片</button>
     </div>
     ${list.length ? `<div class="game-grid">${list.map(f=>`
-      <div class="game-card ${f.done?"done":""}">
-        <div class="gn">🎮 ${esc(f.name)}</div>
-        <div class="gi">
-          ⏱ 时长：${fmtDur(f.minutes)}<br>
-          📅 安排：${f.start?esc(f.start):"--:--"} - ${f.end?esc(f.end):"--:--"}
+      <div class="game-card">
+        <div class="gn">🎮 ${esc(f.name)}
+          <button class="btn-mini" style="float:right" data-action="del-fun-card" data-id="${f.id}">删除</button>
         </div>
+        <div class="gi" style="margin-bottom:8px">累计时长：<b style="color:var(--brand)">${fmtDur(funCardTotal(f))}</b></div>
+        ${f.items.length ? f.items.map(it=>`
+          <div class="fun-item ${it.done?"done":""}">
+            <input type="checkbox" data-change="fun-toggle" data-cid="${f.id}" data-id="${it.id}" ${it.done?"checked":""}>
+            <span class="c small">⏱ ${fmtDur(it.minutes)} · 📅 ${it.start?esc(it.start):"--:--"} - ${it.end?esc(it.end):"--:--"}</span>
+            <button class="btn-mini" data-action="del-fun-item" data-cid="${f.id}" data-id="${it.id}">×</button>
+          </div>`).join("") : '<p class="empty" style="padding:6px 0">还没有记录</p>'}
         <div class="ops">
-          <label class="small"><input type="checkbox" data-change="fun-toggle" data-id="${f.id}" ${f.done?"checked":""}> 已玩</label>
-          <button class="btn-mini" style="margin-left:auto" data-action="del-fun" data-id="${f.id}">删除</button>
+          <button class="btn-ghost" data-action="open-fun-item" data-id="${f.id}">+ 添加记录</button>
         </div>
-      </div>`).join("")}</div>` : '<div class="card"><p class="empty">还没有游戏卡片，添加一张吧</p></div>'}
+      </div>`).join("")}</div>` : ""}
   `;
+}
+function openFunCardModal(){
+  openModal(`
+   <div class="modal-sheet" style="width:420px">
+    <div class="modal-head"><span>🎮 添加游戏卡片</span><button class="btn-mini" data-action="close-modal">✕</button></div>
+    <input type="text" id="mf-name" placeholder="游戏名称，如：塞尔达传说" style="width:100%;margin-bottom:14px">
+    <button class="btn" style="width:100%" data-action="m-save-fun-card">创建卡片</button>
+   </div>`);
+}
+function openFunItemModal(cid){
+  const card = funDay(todayKey()).find(f=>f.id===cid);
+  if(!card) return;
+  openModal(`
+   <div class="modal-sheet" style="width:460px">
+    <div class="modal-head"><span>➕ ${esc(card.name)} · 添加记录</span><button class="btn-mini" data-action="close-modal">✕</button></div>
+    <div class="task-form" style="margin-bottom:14px">
+      <span class="small muted">时长</span>${durBtn("m-fdur", 60)}
+      <span class="small muted">安排</span>${timeBtn("m-fstart","","开始")}<span class="muted">至</span>${timeBtn("m-fend","","结束","m-fstart")}
+    </div>
+    <button class="btn" style="width:100%" data-action="m-save-fun-item" data-id="${cid}">保存记录</button>
+   </div>`);
 }
 
 /* ---------- 清晨心情 ---------- */
@@ -938,6 +1093,7 @@ document.addEventListener("click", async e=>{
 
   switch(a){
     case "nav": showPage(el.dataset.page); break;
+    case "close-modal": closeModal(); break;
 
     /* 全局手动保存 */
     case "save-all": {
@@ -960,8 +1116,7 @@ document.addEventListener("click", async e=>{
       const level = +el.dataset.level;
       const mm = MOODS.find(x=>x.level===level);
       DB.moods[k] = { level, note: (DB.moods[k] ? DB.moods[k].note : "") };
-      save(); renderAll(); // 推荐等内容立即刷新
-      // 渲染后在新按钮上播放动画（粒子挂在 body 上，不受重渲染影响）
+      save(); renderAll();
       const nb = document.querySelector(`#page-${currentPage} [data-action="${a}"][data-level="${level}"]`);
       if(nb) playMoodAnim(nb, mm ? mm.color : "#6c7cf7");
       break;
@@ -991,53 +1146,79 @@ document.addEventListener("click", async e=>{
       if(ask("确定删除这条备忘吗？")){ DB.memos = DB.memos.filter(m=>m.id!==id); save(); renderAll(); }
       break;
 
-    /* 今日计划 */
-    case "add-task": {
-      const title = $("#t-title").value.trim();
+    /* 今日计划（日历弹窗） */
+    case "task-cal-day": openDayModal(el.dataset.date); break;
+    case "m-energy": {
+      mEnergy = el.dataset.e;
+      document.querySelectorAll('#modal-ov [data-action="m-energy"]').forEach(b=> b.classList.toggle("sel", b.dataset.e===mEnergy));
+      break;
+    }
+    case "m-add-task": {
+      const dk = el.dataset.date;
+      const title = $("#m-title").value.trim();
       if(!title) break;
-      const t = {
-        title,
-        start: document.querySelector('[data-key="t-start"]').dataset.value || "",
-        end: document.querySelector('[data-key="t-end"]').dataset.value || "",
-        memo: $("#t-memo").value.trim()
-      };
-      if(!DB.tasks[k]) DB.tasks[k] = [];
-      if(editingTaskId){
-        const it = DB.tasks[k].find(x=>x.id===editingTaskId);
-        if(it) Object.assign(it, t);
-        editingTaskId = null;
-      } else {
-        DB.tasks[k].push(Object.assign({id:uid(), done:false}, t));
+      if(!DB.tasks[dk]) DB.tasks[dk] = [];
+      DB.tasks[dk].push({
+        id: uid(), done: false, energy: mEnergy, title,
+        start: document.querySelector('[data-key="m-start"]').dataset.value || "",
+        end: document.querySelector('[data-key="m-end"]').dataset.value || "",
+        memo: $("#m-memo").value.trim()
+      });
+      save(); renderAll(); openDayModal(dk); break;
+    }
+    case "m-edit-task": openTaskEditModal(el.dataset.date, id); break;
+    case "back-day-modal": openDayModal(el.dataset.date); break;
+    case "m-save-edit": {
+      if(!editingTask) break;
+      const it = (DB.tasks[editingTask.date]||[]).find(x=>x.id===editingTask.id);
+      if(it){
+        const title = $("#me-title").value.trim();
+        if(title){
+          Object.assign(it, {
+            title, energy: mEnergy,
+            start: document.querySelector('[data-key="me-start"]').dataset.value || "",
+            end: document.querySelector('[data-key="me-end"]').dataset.value || "",
+            memo: $("#me-memo").value.trim()
+          });
+          save();
+        }
       }
-      save(); renderAll(); break;
+      const dk = editingTask.date;
+      editingTask = null;
+      renderAll(); openDayModal(dk); break;
     }
-    case "edit-task": {
-      const it = (DB.tasks[k]||[]).find(x=>x.id===id);
-      if(!it) break;
-      editingTaskId = id;
-      renderTasks();
-      $("#t-title").value = it.title;
-      const sb = document.querySelector('[data-key="t-start"]'), eb = document.querySelector('[data-key="t-end"]');
-      if(it.start){ sb.dataset.value = it.start; sb.textContent = it.start; sb.classList.remove("empty"); }
-      if(it.end){ eb.dataset.value = it.end; eb.textContent = it.end; eb.classList.remove("empty"); }
-      $("#t-memo").value = it.memo||"";
+    case "copy-yesterday": {
+      const dk = el.dataset.date;
+      const yd = new Date(dk + "T00:00:00"); yd.setDate(yd.getDate()-1);
+      const src = DB.tasks[keyOf(yd)] || [];
+      if(src.length){
+        if(!DB.tasks[dk]) DB.tasks[dk] = [];
+        src.forEach(t=> DB.tasks[dk].push({
+          id: uid(), done: false, energy: taskEnergy(t),
+          title: t.title, start: t.start||"", end: t.end||"", memo: t.memo||""
+        }));
+        save(); renderAll();
+      }
+      openDayModal(dk); break;
+    }
+    case "del-task": {
+      const dk = el.dataset.date || k;
+      if(ask("确定删除这条任务吗？")){
+        DB.tasks[dk] = (DB.tasks[dk]||[]).filter(t=>t.id!==id);
+        save(); renderAll();
+        if(modalCtx && modalCtx.type==="day") openDayModal(modalCtx.date);
+      }
       break;
     }
-    case "cancel-edit": editingTaskId = null; renderTasks(); break;
-    case "del-task":
-      if(ask("确定删除这条任务吗？")){ DB.tasks[k] = (DB.tasks[k]||[]).filter(t=>t.id!==id); save(); renderAll(); }
-      break;
 
     /* 时间轴 */
     case "tl-new": {
-      editingTaskId = null;
       showPage("tasks");
+      openDayModal(k);
       const h = pad(+el.dataset.hour);
-      const sb = document.querySelector('[data-key="t-start"]'), eb = document.querySelector('[data-key="t-end"]');
-      sb.dataset.value = h+":00"; sb.textContent = h+":00"; sb.classList.remove("empty");
-      eb.dataset.value = pad(Math.min(23,(+el.dataset.hour)+1))+":00";
-      eb.textContent = eb.dataset.value; eb.classList.remove("empty");
-      $("#t-title").focus();
+      setWheelBtn("m-start", h+":00");
+      setWheelBtn("m-end", pad(Math.min(23,(+el.dataset.hour)+1))+":00");
+      const inp = $("#m-title"); if(inp) inp.focus();
       break;
     }
     case "tl-toggle": {
@@ -1061,7 +1242,7 @@ document.addEventListener("click", async e=>{
       const inp = $("#sg-"+id);
       const v = inp.value.trim();
       if(!g || !v) break;
-      g.subgoals.push({id:uid(), text:v, done:false});
+      g.subgoals.push({id:uid(), text:v, done:false, progress:0});
       save(); renderAll(); break;
     }
     case "del-sub": {
@@ -1076,14 +1257,10 @@ document.addEventListener("click", async e=>{
       const f = fitDay(k);
       const minutes = Math.max(0, parseInt(document.querySelector('[data-key="fit-dur"]').dataset.value || "0", 10));
       const detail = $("#f-detail").value.trim();
-      if(minutes === 0 && !detail) break; // 时长和动作至少要填一个
+      if(minutes === 0 && !detail) break;
       f.entries.push({
-        id: uid(),
-        tag: fitTagSel,
-        part: $("#f-part").value,
-        detail: detail,
-        reps: $("#f-reps").value.trim(),
-        minutes: minutes
+        id: uid(), tag: fitTagSel, part: $("#f-part").value,
+        detail: detail, reps: $("#f-reps").value.trim(), minutes: minutes
       });
       save(); renderAll(); break;
     }
@@ -1117,27 +1294,43 @@ document.addEventListener("click", async e=>{
       const box = $("#diet-day-detail");
       box.style.display = "block";
       box.innerHTML = dd && (dd.breakfast||dd.lunch||dd.dinner)
-        ? `<b>${dk}</b><br>🍳 早餐：${esc(dd.breakfast||"—")}<br>🍱 午餐：${esc(dd.lunch||"—")}<br>🍲 晚餐：${esc(dd.dinner||"—")}`
+        ? `<b>${dk}</b><br>🍳 早餐：${esc(dd.breakfast||"—")}<br>🍱 午餐：${esc(dd.lunch||"—")}<br>🍲 晚餐：${esc(dd.dinner||"—")}<br><span style="color:var(--brand)">${dietKcalText(dd)}</span>`
         : dk + "：没有饮食记录";
       break;
     }
 
-    /* 娱乐（游戏卡片） */
-    case "add-fun": {
-      const c = $("#fun-name").value.trim();
+    /* 娱乐（弹窗创建卡片 / 弹窗添加记录） */
+    case "open-fun-card": openFunCardModal(); break;
+    case "m-save-fun-card": {
+      const c = $("#mf-name").value.trim();
       if(!c) break;
-      funDay(k).push({
-        id: uid(), name: c,
-        minutes: Math.max(0, parseInt(document.querySelector('[data-key="fun-dur"]').dataset.value || "0", 10)),
-        start: document.querySelector('[data-key="fun-start"]').dataset.value || "",
-        end: document.querySelector('[data-key="fun-end"]').dataset.value || "",
-        done: false
-      });
-      save(); renderAll(); break;
+      funDay(k).push({ id: uid(), name: c, items: [] });
+      save(); closeModal(); renderAll(); break;
     }
-    case "del-fun":
-      if(ask("确定删除这张游戏卡片吗？")){ DB.fun[k] = funDay(k).filter(f=>f.id!==id); save(); renderAll(); }
+    case "open-fun-item": openFunItemModal(id); break;
+    case "m-save-fun-item": {
+      const card = funDay(k).find(f=>f.id===id);
+      if(!card) break;
+      const minutes = Math.max(0, parseInt(document.querySelector('[data-key="m-fdur"]').dataset.value || "0", 10));
+      const start = document.querySelector('[data-key="m-fstart"]').dataset.value || "";
+      const end = document.querySelector('[data-key="m-fend"]').dataset.value || "";
+      if(minutes === 0 && !start) break;
+      card.items.push({ id: uid(), minutes, start, end, done: false });
+      save(); closeModal(); renderAll(); break;
+    }
+    case "del-fun-card":
+      if(ask("确定删除这张游戏卡片吗？卡片内的记录也会一起删除。")){
+        DB.fun[k] = funDay(k).filter(f=>f.id!==id); save(); renderAll();
+      }
       break;
+    case "del-fun-item": {
+      const card = funDay(k).find(f=>f.id===el.dataset.cid);
+      if(card && ask("确定删除这条记录吗？")){
+        card.items = card.items.filter(x=>x.id!==id);
+        save(); renderAll();
+      }
+      break;
+    }
 
     /* 数据管理 */
     case "export": {
@@ -1161,7 +1354,7 @@ document.addEventListener("click", async e=>{
     case "clear-all":
       if(ask("确定清空全部数据吗？此操作不可恢复！建议先导出备份。")){
         if(ask("再次确认：真的要删除所有数据吗？")){
-          DB = blank(); save(); renderAll();
+          DB = blank(); save(); renderAll(); closeModal();
         }
       }
       break;
@@ -1175,8 +1368,12 @@ document.addEventListener("change", e=>{
   const k = todayKey();
   switch(c){
     case "toggle-task": {
-      const it = (DB.tasks[k]||[]).find(x=>x.id===id);
-      if(it){ it.done = el.checked; save(); renderAll(); }
+      const dk = el.dataset.date || k;
+      const it = (DB.tasks[dk]||[]).find(x=>x.id===id);
+      if(it){
+        it.done = el.checked; save(); renderAll();
+        if(modalCtx && modalCtx.type==="day") openDayModal(modalCtx.date);
+      }
       break;
     }
     case "goal-progress": {
@@ -1187,16 +1384,26 @@ document.addEventListener("change", e=>{
     case "sub-toggle": {
       const g = DB.goals.find(x=>x.id===el.dataset.gid);
       const s = g && g.subgoals.find(x=>x.id===id);
-      if(s){ s.done = el.checked; save(); renderAll(); }
+      if(s){ s.done = el.checked; if(el.checked) s.progress = 100; save(); renderAll(); }
+      break;
+    }
+    case "sub-progress": {
+      const g = DB.goals.find(x=>x.id===el.dataset.gid);
+      const s = g && g.subgoals.find(x=>x.id===id);
+      if(s){ s.progress = +el.value; s.done = (s.progress >= 100); save(); renderAll(); }
       break;
     }
     case "diet": {
       if(!DB.diet[k]) DB.diet[k] = {breakfast:"", lunch:"", dinner:""};
       DB.diet[k][el.dataset.meal] = el.value.trim();
-      save(); break;
+      save();
+      const kcalEl = document.getElementById("diet-kcal");
+      if(kcalEl) kcalEl.textContent = dietKcalText(DB.diet[k]); // 只更新热量行，不打断输入
+      break;
     }
     case "fun-toggle": {
-      const it = funDay(k).find(x=>x.id===id);
+      const card = funDay(k).find(x=>x.id===el.dataset.cid);
+      const it = card && card.items.find(x=>x.id===id);
       if(it){ it.done = el.checked; save(); renderAll(); }
       break;
     }
@@ -1221,7 +1428,8 @@ setInterval(()=>{ if(currentPage==="timeline") renderTimeline(); }, 60000);
 window.__app = {
   get DB(){ return DB; },
   recommend, exportJSON, importData, calcStreak, completionRate, todayKey, keyOf,
-  showPage, blank, fitDay, fitTotal, funDay, fmtDur
+  showPage, blank, fitDay, fitTotal, funDay, funCardTotal, fmtDur,
+  estimateKcal, dietKcalText, openDayModal
 };
 
 renderAll();

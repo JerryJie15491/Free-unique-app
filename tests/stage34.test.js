@@ -105,37 +105,75 @@ t('饮食日历今天有标记，点击查看明细', () => {
   ok(box.textContent.includes('包子豆浆'));
 });
 
-console.log('== 阶段3: 游戏娱乐（游戏卡片） ==');
+console.log('== 阶段3: 游戏娱乐（弹窗建卡 + 弹窗记录，大卡） ==');
 d.querySelector('[data-page="fun"]').click();
 t('显示娱乐推荐与理由', () => {
   ok(d.querySelector('#page-fun .rec-card').textContent.includes('推荐理由'));
 });
-t('保存游戏卡片（名称+时长+安排时间）', () => {
-  d.querySelector('#fun-name').value = '塞尔达传说';
-  setBtn(d, 'fun-dur', '90');
-  setBtn(d, 'fun-start', '20:00');
-  setBtn(d, 'fun-end', '21:30');
-  d.querySelector('[data-action="add-fun"]').click();
+t('点击添加卡片弹出窗口', () => {
+  d.querySelector('[data-action="open-fun-card"]').click();
+  ok(d.querySelector('#modal-ov'), '弹窗未出现');
+  ok(d.querySelector('#mf-name'), '弹窗缺少名称输入');
+});
+t('弹窗中创建游戏卡片', () => {
+  d.querySelector('#mf-name').value = '塞尔达传说';
+  d.querySelector('[data-action="m-save-fun-card"]').click();
   const list = app().funDay(todayKey());
   eq(list.length, 1);
   eq(list[0].name, '塞尔达传说');
-  eq(list[0].minutes, 90);
-  eq(list[0].start, '20:00');
-  eq(list[0].end, '21:30');
+  eq(list[0].items.length, 0);
+  ok(!d.querySelector('#modal-ov'), '保存后弹窗应关闭');
+  ok(d.querySelector('.game-card'), '卡片应出现');
 });
-t('卡片渲染包含名称/时长/安排时间', () => {
+t('卡片内"添加记录"弹窗记录时长与安排时间', () => {
+  const cid = app().funDay(todayKey())[0].id;
+  d.querySelector('[data-action="open-fun-item"][data-id="' + cid + '"]').click();
+  ok(d.querySelector('#modal-ov'), '记录弹窗未出现');
+  ok(d.querySelector('#modal-ov').textContent.includes('塞尔达传说'));
+  setBtn(d, 'm-fdur', '90');
+  setBtn(d, 'm-fstart', '20:00');
+  setBtn(d, 'm-fend', '21:30');
+  d.querySelector('[data-action="m-save-fun-item"]').click();
+  const items = app().funDay(todayKey())[0].items;
+  eq(items.length, 1);
+  eq(items[0].minutes, 90);
+  eq(items[0].start, '20:00');
+  eq(items[0].end, '21:30');
+});
+t('同一张卡可添加多条记录，累计时长正确', () => {
+  const cid = app().funDay(todayKey())[0].id;
+  d.querySelector('[data-action="open-fun-item"][data-id="' + cid + '"]').click();
+  setBtn(d, 'm-fdur', '30');
+  d.querySelector('[data-action="m-save-fun-item"]').click();
+  eq(app().funDay(todayKey())[0].items.length, 2);
+  eq(app().funCardTotal(app().funDay(todayKey())[0]), 120);
+  ok(d.querySelector('.game-card').textContent.includes('2 小时'));
+});
+t('卡片渲染包含名称和记录的时长/安排时间', () => {
   const card = d.querySelector('.game-card');
-  ok(card, '没有游戏卡片');
   ok(card.textContent.includes('塞尔达传说'));
   ok(card.textContent.includes('1 小时 30 分'));
   ok(card.textContent.includes('20:00'));
 });
-t('勾选"已玩"与删除卡片', () => {
+t('勾选记录完成、删除单条记录', () => {
   d.querySelector('[data-change="fun-toggle"]').click();
-  eq(app().funDay(todayKey())[0].done, true);
-  ok(d.querySelector('.game-card.done'));
-  d.querySelector('[data-action="del-fun"]').click();
+  eq(app().funDay(todayKey())[0].items[0].done, true);
+  d.querySelector('[data-action="del-fun-item"]').click();
+  eq(app().funDay(todayKey())[0].items.length, 1);
+});
+t('删除整张卡片', () => {
+  d.querySelector('[data-action="del-fun-card"]').click();
   eq(app().funDay(todayKey()).length, 0);
+});
+t('旧格式扁平记录自动迁移为卡片+卡内记录', () => {
+  app().DB.fun[todayKey()] = [{ id:'old1', content:'老游戏', minutes:45, start:'19:00', end:'19:45', done:true }];
+  const list = app().funDay(todayKey());
+  eq(list[0].name, '老游戏');
+  eq(list[0].items.length, 1);
+  eq(list[0].items[0].minutes, 45);
+  eq(list[0].items[0].done, true);
+  app().DB.fun[todayKey()] = [];
+  app().showPage('fun');
 });
 
 console.log('== 阶段4: 学习目标 ==');
